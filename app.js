@@ -2,7 +2,7 @@
 var restify = require('restify');
 
 function handleRequest(req, res, next) {
-  res.send('hello ' + req.params.name);
+  res.send('hello back!');
   next();
 }
 
