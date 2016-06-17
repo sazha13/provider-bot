@@ -1,15 +1,22 @@
 {
-  "name": "consumer_bot",
+  "name": "provider_bot",
   "version": "1.0.0",
-  "description": "Consumer bot",
-  "main": "index.js",
+  "description": "Bot for BotConnector",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akopanev/provider-bot.git"
+  },
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akopanev/provider-bot/issues"
+  },
+  "homepage": "https://github.com/akopanev/provider-bot#readme",
   "dependencies": {
-    "botbuilder": "^1.0.1",
     "restify": "^4.1.0"
   }
 }
