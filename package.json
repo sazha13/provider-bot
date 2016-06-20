@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/akopanev/provider-bot#readme",
   "dependencies": {
-    "restify": "^4.1.0"
+    "express": "^4.10.2"
   }
 }
