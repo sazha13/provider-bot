@@ -1,12 +1,21 @@
-var express = require('express');
-var app = express();
+var restify = require('restify');
 var port = process.env.PORT || 3000;
-var http = require('http').Server(app);
 
-app.get('/', function(req, res){
- res.sendFile(__dirname + '/index.html');
-});
+function respond(req, res, next) {
+  res.send('Your bot response :)');
+  next();
+}
 
-http.listen(port, function(){
- console.log('listening on ' + port);
+// post request
+function handleRequestMessage(req, res, next) {
+  res.send('POST API Response!!!');
+  next();
+}
+
+var server = restify.createServer();
+server.get('/', respond);
+server.post('/request', handleRequestMessage);
+
+server.listen(port, function() {
+  console.log('%s listening at %s', server.name, server.url);
 });
