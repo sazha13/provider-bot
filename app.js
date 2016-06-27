@@ -7,7 +7,7 @@ var port = process.env.PORT || 3000;
 
 function respond(req, res, next) {
   res.contentType = "text/plain";
-  res.send('Your bot response :)');
+  res.send('Hello world! :)');
   next();
 }
 
