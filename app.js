@@ -46,11 +46,11 @@ db.once('open', function() {
   console.log("connection DB ok");
 });
 var providersSchemaFrom = new mongoose.Schema({
-  "name": "string",
-  "channelId": "string",
-  "address": "string",
-  "id": "string",
-  "isBot": true
+  "name": String,
+  "channelId": String,
+  "address": String,
+  "id": String,
+  "isBot": Boolean
   });
 var Providers = mongoose.model('Providers', providersSchemaFrom);
 
