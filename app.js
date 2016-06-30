@@ -24,6 +24,14 @@ server.post('/request', handleRequestMessage);
 
 server.listen(port, function() {
   console.log('%s listening at %s', server.name, server.url);
+  // var item = new Providers({
+  //   name: "String",
+  //   channelId: "String",
+  //   address: "String",
+  //   id: "String",
+  //   isBot: true
+  // });
+  // item.save();
 });
 
 // bot creation
@@ -38,6 +46,7 @@ bot.add('/', function (session) {
         item.save();
       };
     });
+
 });
 
 var db = mongoose.connection;
@@ -46,11 +55,11 @@ db.once('open', function() {
   console.log("connection DB ok");
 });
 var providersSchemaFrom = new mongoose.Schema({
-  "name": String,
-  "channelId": String,
-  "address": String,
-  "id": String,
-  "isBot": Boolean
+  name: String,
+  channelId: String,
+  address: String,
+  id: String,
+  isBot: Boolean
   });
 var Providers = mongoose.model('Providers', providersSchemaFrom);
 
