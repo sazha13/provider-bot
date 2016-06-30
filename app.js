@@ -56,4 +56,4 @@ var Providers = mongoose.model('Providers', providersSchemaFrom);
 
 // Setup Restify Server
 server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
-mongoose.connect(process.env.MONGO_URI||'mongodb://sazha:sazha123@ds035485.mlab.com:35485/telegrambot');
+mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
