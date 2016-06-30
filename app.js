@@ -38,15 +38,16 @@ server.listen(port, function() {
 var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
 bot.add('/', function (session) {
     session.send('Provider bot in operation :-)');
-    // Providers.findOne({ channelId: session.from.channelId }, function(err, exmpl1) {
-    //   if (err) return console.error(err);
-    //   if (exmpl1 == null)
-    //   {
-    //     var item = new Providers(session.from);
-    //     item.save();
-    //   };
-    // });
-    // session.send(dir(session.from));
+    var from1 = session.message.from;
+    Providers.findOne({ channelId: from1.channelId }, function(err, exmpl1) {
+      if (err) return console.error(err);
+      if (exmpl1 == null)
+      {
+        var item = new Providers(from1);
+        item.save();
+      };
+    });
+    
 
 });
 
