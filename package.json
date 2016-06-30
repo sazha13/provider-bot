@@ -18,6 +18,7 @@
   "homepage": "https://github.com/akopanev/provider-bot#readme",
   "dependencies": {
     "botbuilder": "^1.0.1",
+    "mongoose": "^4.5.2",
     "restify": "^4.1.0"
   }
 }
