@@ -46,7 +46,7 @@ bot.add('/', function (session) {
     //     item.save();
     //   };
     // });
-    session.send(dir(session.from));
+    // session.send(dir(session.from));
 
 });
 
