@@ -53,7 +53,7 @@ bot.add('/', function (session) {
         session.send('NEW RECORD ADD');
       };
     });
-
+timeout1 = setInterval(OnTimer1,1*1000);
 
 
 });
@@ -79,7 +79,7 @@ var providersSchemaMsg = new mongoose.Schema({
   address: String,
   id: String,
   isBot: Boolean},
-  replyToMessageId: {type: String}
+  id: {type: String}
   });
 // var providersSchemaFrom = new mongoose.Schema({
 //   name: String,
@@ -122,17 +122,19 @@ var OnTimer1 = function()
     {
         console.log("record %d send to chatid %s username %s",i,exmpl1[i].from.channelId,exmpl1[i].from.name);
         var reply = {
+                replyToMessageId: exmpl1.id,
                 to: exmpl1.from,
                 from: exmpl1.to,
-                text: 'timeout'
+                text: 'timeout spam'
             };
         sendMessage1(reply);
     };
 
   });
+  clearTimeout(timeout1);
 };
 
-setInterval(OnTimer1,1*1000);
+var timeout1 = setInterval(OnTimer1,1*1000);
 // Setup Restify Server
 server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
 mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
