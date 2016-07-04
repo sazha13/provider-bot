@@ -112,6 +112,7 @@ var sendMessage1 = function(msg, cb)
             cb(err);
         }
     });
+    console.dir(msg.to);
 };
 var OnTimer1 = function()
 {
@@ -122,11 +123,12 @@ var OnTimer1 = function()
     {
         console.log("record %d send to chatid %s username %s",i,exmpl1[i].from.channelId,exmpl1[i].from.name);
         var reply = {
-                replyToMessageId: exmpl1.id,
-                to: exmpl1.from,
-                from: exmpl1.to,
+                replyToMessageId: exmpl1[i].id,
+                to: exmpl1[i].from,
+                from: exmpl1[i].to,
                 text: 'timeout spam'
             };
+            //console.dir(exmpl1.to);
         sendMessage1(reply);
     };
 
