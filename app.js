@@ -3,6 +3,7 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var mongoose = require('mongoose');
 var msRest = require('ms-rest');
+var connector = require('botconnector');
 
 // constants
 var port = process.env.PORT || 3000;
@@ -89,17 +90,18 @@ var providersSchemaMsg = new mongoose.Schema({
 //   });
 // var Providers = mongoose.model('Providers', providersSchemaFrom);
 var MyMonngooseShema = mongoose.model('ShemaMsg', providersSchemaMsg);
-var SendMessage1 = function( provider1)
+// var SendMessage1 = function( provider1)
+// {
+//   var connector = new ConnectorClient();
+//   var msg = new Message();
+//   msg.from = botChannelAccount;
+//   msg.To = provider1;
+//   msg.Text = "Hey, what's up homey?";
+//   msg.Language = "ru-RU";
+//   connector.Messages.SendMessage(msg);
+// };
+var sendMessage1 = function(msg, cb)
 {
-  var connector = new ConnectorClient();
-  var msg = new Message();
-  msg.from = botChannelAccount;
-  msg.To = provider1;
-  msg.Text = "Hey, what's up homey?";
-  msg.Language = "ru-RU";
-  connector.Messages.SendMessage(msg);
-};
-function sendMessage(msg, cb) {
     var client = new connector(credentials);
     var options = { customHeaders: {'Ocp-Apim-Subscription-Key': credentials.password}};
     client.messages.sendMessage(msg, options, function (err, result, request, response) {
@@ -110,27 +112,27 @@ function sendMessage(msg, cb) {
             cb(err);
         }
     });
-}
+};
 var OnTimer1 = function()
 {
-  Providers.find(function(err, exmpl1) {
+  MyMonngooseShema.find(function(err, exmpl1) {
     if (err) return console.error(err);
     // console.dir(exmpl1);
     for (var i = 0; i<exmpl1.length; i++)
     {
-        console.log("record %d send to chatid %s username %s",i,exmpl1[i].channelId,exmpl1[i].name);
+        console.log("record %d send to chatid %s username %s",i,exmpl1[i].from.channelId,exmpl1[i].from.name);
         var reply = {
-                to: exmpl1,
-                from: botChannelAccount,
+                to: exmpl1.from,
+                from: exmpl1.to,
                 text: 'timeout'
             };
-        SendMessage(reply);
+        sendMessage1(reply);
     };
 
   });
 };
 
-// setInterval(OnTimer1,1*1000);
+setInterval(OnTimer1,1*1000);
 // Setup Restify Server
 server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
 mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
