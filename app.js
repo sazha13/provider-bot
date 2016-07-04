@@ -6,10 +6,10 @@ var msRest = require('ms-rest');
 
 // constants
 var port = process.env.PORT || 3000;
-
+var ServerMsg = 'This is provider-bot :)';
 function respond(req, res, next) {
   res.contentType = "text/plain";
-  res.send('This is provider-bot :)');
+  res.send(ServerMsg);
   next();
 }
 
@@ -40,12 +40,14 @@ var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da87
 bot.add('/', function (session) {
     session.send('Provider bot in operation :-)');
     var from1 = session.message;
+    ServerMsg = 'HERE';
     MyMonngooseShema.findOne({ 'from.address': 'from1.from.address' }, function(err, exmpl1) {
       if (err) return console.error(err);
       if (exmpl1 == null)
       {
         var item = new MyMonngooseShema(from1);
         item.save();
+        ServerMsg = 'NEW RECORD ADD';
       };
     });
 
