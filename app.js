@@ -35,7 +35,7 @@ server.listen(port, function() {
   // });
   // item.save();
 });
-
+//var countmsgs = 0;
 // bot creation
 var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
 bot.add('/', function (session) {
@@ -53,7 +53,7 @@ bot.add('/', function (session) {
         session.send('NEW RECORD ADD');
       };
     });
-timeout1 = setInterval(OnTimer1,1*1000);
+timeout1 = setInterval(OnTimer1,10*1000);
 
 
 });
@@ -136,7 +136,7 @@ var OnTimer1 = function()
   clearTimeout(timeout1);
 };
 
-var timeout1 = setInterval(OnTimer1,1*1000);
+var timeout1 = null;// = setInterval(OnTimer1,10*1000);
 // Setup Restify Server
 server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
 mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
