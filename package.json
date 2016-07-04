@@ -19,6 +19,7 @@
   "dependencies": {
     "botbuilder": "^1.0.1",
     "mongoose": "^4.5.2",
+    "ms-rest": "^1.14.3",
     "restify": "^4.1.0"
   }
 }
