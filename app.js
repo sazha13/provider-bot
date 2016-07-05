@@ -23,19 +23,12 @@ function handleRequestMessage(req, res, next) {
 var server = restify.createServer();
 server.get('/', respond);
 server.post('/request', handleRequestMessage);
+server.post('/sendMessageToCustomer/:ProviderId', sendMessageFromProvider);
 
 server.listen(port, function() {
   console.log('%s listening at %s', server.name, server.url);
-  // var item = new Providers({
-  //   name: "String",
-  //   channelId: "String",
-  //   address: "String",
-  //   id: "String",
-  //   isBot: true
-  // });
-  // item.save();
+
 });
-//var countmsgs = 0;
 // bot creation
 var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
 bot.add('/', function (session) {
@@ -53,7 +46,7 @@ bot.add('/', function (session) {
         session.send('NEW RECORD ADD');
       };
     });
-timeout1 = setInterval(OnTimer1,10*1000);
+//timeout1 = setInterval(OnTimer1,10*1000);
 
 
 });
@@ -81,25 +74,31 @@ var providersSchemaMsg = new mongoose.Schema({
   isBot: Boolean},
   id: {type: String}
   });
-// var providersSchemaFrom = new mongoose.Schema({
-//   name: String,
-//   channelId: String,
-//   address: String,
-//   id: String,
-//   isBot: Boolean
-//   });
-// var Providers = mongoose.model('Providers', providersSchemaFrom);
+
 var MyMonngooseShema = mongoose.model('ShemaMsg', providersSchemaMsg);
-// var SendMessage1 = function( provider1)
-// {
-//   var connector = new ConnectorClient();
-//   var msg = new Message();
-//   msg.from = botChannelAccount;
-//   msg.To = provider1;
-//   msg.Text = "Hey, what's up homey?";
-//   msg.Language = "ru-RU";
-//   connector.Messages.SendMessage(msg);
-// };
+
+function sendMessageFromProvider(req, res, next)
+{
+  if (req.params.ProviderId != '1')
+    return 0;
+  MyMonngooseShema.find(function(err, items)
+  {
+      if (err) return console.error(err);
+      for (var i = 0; i<items.length; i++)
+      {
+          console.log("record %d send to chatid %s username %s",i,exmpl1[i].from.channelId,exmpl1[i].from.name);
+          var reply = {
+                  replyToMessageId: items[i].id,
+                  to: items[i].from,
+                  from: items[i].to,
+                  text: 'Message from provider ' + req.params.ProviderId
+              };
+              //console.dir(exmpl1.to);
+          sendMessage1(reply);
+      };
+  });
+  res.send('Message Sended');
+};
 var sendMessage1 = function(msg, cb)
 {
     var client = new connector(credentials);
@@ -133,7 +132,7 @@ var OnTimer1 = function()
     };
 
   });
-  clearTimeout(timeout1);
+  //clearTimeout(timeout1);
 };
 
 var timeout1 = null;// = setInterval(OnTimer1,10*1000);
