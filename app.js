@@ -126,7 +126,7 @@ function getContentMsg(req, res, next)
 function sendMessageFromProvider(req, res, next)
 {
 
-  console.log(req.body.message);
+  console.log(req.body.text);
 
   // MyMonngooseShema.find(function(err, items)
   // {
@@ -151,7 +151,7 @@ function sendMessageFromProvider(req, res, next)
                   replyToMessageId: req.body.id,
                   to: req.body.from,
                   from: req.body.to,
-                  text: req.body.message
+                  text: req.body.text
               };
               sendMessage1(reply);
   res.send('Message maybe sended');
