@@ -57,7 +57,8 @@ bot.add('/', function (session) {
     });
     var msg1 = new MsgTmpShema(from1);
     msg1.unRead = true;
-    item.save();
+    msg1.save();
+    console.dir(msg1);
 //timeout1 = setInterval(OnTimer1,10*1000);
 
 
@@ -99,12 +100,12 @@ var providersSchemaMsg = new mongoose.Schema({
     id: String,
     isBot: Boolean},
     id: {type: String},
-    unRead: Boolean,
+    unRead: {type: Boolean},
     text: {type: String}
     });
 
 var MyMonngooseShema = mongoose.model('ShemaMsg', providersSchemaMsg);
-var MsgTmpShema = mongoose.model('MsgTmpShema', providersSchemaMsg);
+var MsgTmpShema = mongoose.model('MsgTmpShema', SchemaMsgTMP);
 
 function getContentMsg(req, res, next)
 {
