@@ -4,6 +4,7 @@ var builder = require('botbuilder');
 var mongoose = require('mongoose');
 var msRest = require('ms-rest');
 var connector = require('botconnector');
+// var express = require('express');
 
 // constants
 var port = process.env.PORT || 3000;
@@ -21,14 +22,22 @@ function handleRequestMessage(req, res, next) {
 }
 
 var server = restify.createServer();
+// var server = express.createServer();
+
 server.get('/', respond);
 server.post('/request', handleRequestMessage);
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.bodyParser());
+// server.use(restify.dateParser());
+  // server.use(restify.queryParser());
+  // server.use(restify.authorizationParser());
 server.post('/sendMessageToCustomer/:ProviderId', sendMessageFromProvider);
-
+server.get('/getContent/:ProviderId',getContentMsg);
 server.listen(port, function() {
   console.log('%s listening at %s', server.name, server.url);
 
 });
+
 // bot creation
 var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
 bot.add('/', function (session) {
@@ -46,6 +55,9 @@ bot.add('/', function (session) {
         session.send('NEW RECORD ADD');
       };
     });
+    var msg1 = new MsgTmpShema(from1);
+    msg1.unRead = true;
+    item.save();
 //timeout1 = setInterval(OnTimer1,10*1000);
 
 
@@ -75,29 +87,73 @@ var providersSchemaMsg = new mongoose.Schema({
   id: {type: String}
   });
 
-var MyMonngooseShema = mongoose.model('ShemaMsg', providersSchemaMsg);
+  var SchemaMsgTMP = new mongoose.Schema({
+    from:{name: String,
+    channelId: String,
+    address: String,
+    id: String,
+    isBot: Boolean},
+    to: {name: String,
+    channelId: String,
+    address: String,
+    id: String,
+    isBot: Boolean},
+    id: {type: String},
+    unRead: Boolean,
+    text: {type: String}
+    });
 
+var MyMonngooseShema = mongoose.model('ShemaMsg', providersSchemaMsg);
+var MsgTmpShema = mongoose.model('MsgTmpShema', providersSchemaMsg);
+
+function getContentMsg(req, res, next)
+{
+  MsgTmpShema.findOne({'unRead': true},function(err,item)
+  {
+    if (item!=null)
+    {
+      res.send(item);
+      item.unRead = false;
+      item.save();
+    }
+    else {
+      res.send('null');
+    }
+
+  });
+}
 function sendMessageFromProvider(req, res, next)
 {
-  if (req.params.ProviderId != '1')
-    return 0;
-  MyMonngooseShema.find(function(err, items)
-  {
-      if (err) return console.error(err);
-      for (var i = 0; i<items.length; i++)
-      {
-          console.log("record %d send to chatid %s username %s",i,exmpl1[i].from.channelId,exmpl1[i].from.name);
-          var reply = {
-                  replyToMessageId: items[i].id,
-                  to: items[i].from,
-                  from: items[i].to,
-                  text: 'Message from provider ' + req.params.ProviderId
+
+  console.log(req.body.message);
+
+  // MyMonngooseShema.find(function(err, items)
+  // {
+  //   console.log('item.length = '+items.length);
+  //     if (err) return console.error(err);
+  //     for (var i = 0; i<items.length; i++)
+  //     {
+  //       console.log('send');
+  //
+  //         var reply = {
+  //                 replyToMessageId: items[i].id,
+  //                 to: items[i].from,
+  //                 from: items[i].to,
+  //                 text: req.body.message
+  //             };
+  //             //console.dir(exmpl1.to);
+  //         sendMessage1(reply);
+  //         //res.send(reply.text);
+  //     };
+  // });
+  var reply = {
+                  replyToMessageId: req.body.id,
+                  to: req.body.from,
+                  from: req.body.to,
+                  text: req.body.message
               };
-              //console.dir(exmpl1.to);
-          sendMessage1(reply);
-      };
-  });
-  res.send('Message Sended');
+              sendMessage1(reply);
+  res.send('Message maybe sended');
 };
 var sendMessage1 = function(msg, cb)
 {
@@ -111,7 +167,7 @@ var sendMessage1 = function(msg, cb)
             cb(err);
         }
     });
-    console.dir(msg.to);
+    //console.dir(msg.to);
 };
 var OnTimer1 = function()
 {

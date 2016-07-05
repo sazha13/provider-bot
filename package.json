@@ -16,6 +16,10 @@
     "url": "https://github.com/akopanev/provider-bot/issues"
   },
   "homepage": "https://github.com/akopanev/provider-bot#readme",
+  "engines": {
+    "node": "6.2.2",
+    "npm": "3.9.5"
+  },
   "dependencies": {
     "botbuilder": "^1.0.1",
     "botconnector": "^0.9.6",
