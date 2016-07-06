@@ -109,18 +109,32 @@ var MsgTmpShema = mongoose.model('MsgTmpShema', SchemaMsgTMP);
 
 function getContentMsg(req, res, next)
 {
-  MsgTmpShema.findOne({'unRead': true},function(err,item)
+  // MsgTmpShema.findOne({'unRead': true},function(err,item)
+  // {
+  //   if (item!=null)
+  //   {
+  //     res.contentType('application/json');
+  //     res.charset = 'utf8';
+  //     res.send(item);
+  //     item.unRead = false;
+  //     item.save();
+  //   }
+  //   else {
+  //     res.send('null');
+  //   }
+  //
+  // });
+  MsgTmpShema.find(function(err,items)
   {
-    if (item!=null)
-    {
-      res.send(item);
-      item.unRead = false;
-      item.save();
-    }
-    else {
-      res.send('null');
-    }
-
+    res.contentType = 'application/json';
+        res.charset = 'utf8';
+        res.send(items);
+        for (var i = 0; i<items.length; i++)
+        {
+          items[i].unRead = false;
+          items[i].save();
+        }
+        res.send(items);
   });
 }
 function sendMessageFromProvider(req, res, next)
