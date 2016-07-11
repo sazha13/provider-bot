@@ -34,7 +34,7 @@ server.use(restify.bodyParser());
 server.post('/sendMessageToCustomer/:ProviderId', sendMessageFromProvider);
 server.get('/getContent/:ProviderId',getContentMsg);
 /// New API
-server.get('/threads',getThreads);
+server.get('/thread',getThreads);
 server.get('/thread/:THREAD_ID/messages',getThreadMsgs);
 server.post('/thread/:THREAD_ID/messages',postThreadMsgs);
 server.post('/apns',postAPNs);
@@ -86,7 +86,6 @@ bot.add('/', function (session) {
 
 function AddMsgInDB(ThreadId, msg)
 {
-console.log(ThreadId);
     var record = new MsgDB();
     record.created = msg.created;
     record.text = msg.text;
@@ -217,6 +216,8 @@ function getThreads(req, res, next)
 
 function getThreadMsgs(req, res, next)
 {
+  res.contentType = 'application/json';
+  res.charset = 'utf-8';
   MsgDB.find({"ThreadId": req.params.THREAD_ID}).sort({"created" : -1}).exec(function(err,items){
     res.send(items);
   });
@@ -235,7 +236,6 @@ function postThreadMsgs(req, res, next)
 
   function LonThread(err,item)
   {
-
     if (item==null)
     {
       console.log("item1 " + item);
@@ -260,23 +260,25 @@ function postThreadMsgs(req, res, next)
       finish(true);
       return;
     }
-    reply.replyToMessageId = item.id;
+    //reply.replyToMessageId = item.id;
     finish(false);
   }
   function finish(err)
   {
     console.log(reply);
     if (!err)
+    {
       sendMessage1(reply);
+    }
     res.contentType = 'application/json';
     res.charset = 'utf-8';
-    res.send([]);
+    res.send(201);
   }
 };
 
 function postAPNs(req, res, next)
 {
-  res.send('postThreadMsgs not available');
+  res.send(201);
 };
 
 ///END new API function
