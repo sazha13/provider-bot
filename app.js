@@ -74,31 +74,38 @@ bot.add('/', function (session) {
       {
         var record = new ChanelDB(recvedMsg);
         record.save();
-        CheckThreads(record.id);
-        AddMsgInDB(record.id,recvedMsg);
+        CheckThreads(record.id,recvedMsg);
+        //AddMsgInDB(record.id,recvedMsg);
       }
       else
       {
-        CheckThreads(item.id);
-        AddMsgInDB(item.id,recvedMsg);
+        CheckThreads(item.id,recvedMsg);
+        //AddMsgInDB(item.id,recvedMsg);
       }
     });
-    function CheckThreads(chanelId)
+    function CheckThreads(chanelId,recvedMsg)
     {
       ThreadDB.find({"consumer" : chanelId}).exec(LonFindConsumers);
       function LonFindConsumers(err,items){
         if (items.length==0)
-          CreateNewThreads(chanelId);
+          CreateNewThreads(chanelId,recvedMsg);
+        else
+        {
+          var msgid = AddMsgInDB(chanelId,recvedMsg);
+          ThreadDB.update({"consumer":chanelId},{$push:{msgs:msgid}},function(err, num){console.dir(num);});
+        }
       }
 
     }
-    function CreateNewThreads(chanelId){
-      ProviderDB.find().exec(function(err,items){
-        items.forEach(function(item){
-          var record = new ThreadDB({"consumer": chanelId, "provider": item._id});
-          record.save();
-        });
-      });
+    function CreateNewThreads(chanelId,recvedMsg){
+      var msgid = AddMsgInDB(chanelId,recvedMsg);
+      ProviderDB.find().exec(AddThread);
+        function AddThread(err,items){
+          items.forEach(function(item){
+            var record = new ThreadDB({"consumer": chanelId, "provider": item._id, "msgs":[msgid]});
+            record.save();
+          });
+        }
     }
 //timeout1 = setInterval(OnTimer1,10*1000);
 
@@ -133,7 +140,8 @@ function AddMsgInDB(ChanelId, msg)
     //     item.msgs.push(record._id);
     //   });
     // });
-    ThreadDB.update({"consumer":record.ChanelId},{$push:{msgs:record._id}},function(err, num){});
+    // ThreadDB.update({"consumer":record.ChanelId},{$push:{msgs:record._id}},function(err, num){console.dir(num);});
+    return record._id;
 };
 
 var appId = process.env.appId || 'ProivderBot';
@@ -281,7 +289,6 @@ function getThreads(req, res, next)
         res.send(401);
       else
       {
-        console.log(items[0]._id);
         LgetThreads(items[0]._id);
 
       }
@@ -296,68 +303,75 @@ function getThreads(req, res, next)
   function LonThreads(err,items){
     if (items.length==0)
     {
-      console.log("LonThreads return");
       finish();
       return;
     }
-    console.log("LonThreads");
-    console.log(items);
     items.forEach(function (item,i)
     {
       result.push({});
       result[i].thread_id = item._id;
       //result[i].name = item.from.name;
-      console.log(item.consumer);
-      LgetConsumer(item.consumer,i);
-      LgetThreadLastMsg(item.msgs);
+      var p1 = new Promise(function(res,req){
+        LgetConsumer(item.consumer,i);
+        function LgetConsumer(consumer_id,i)
+        {
+          // tekI = i;
+          var query = ChanelDB.find({"_id":consumer_id}).limit(1);
+          query.exec(LonConsumer);
+        }
+        function LonConsumer(err,items)
+        {
+
+          result[i].consumer = {};
+          result[i].consumer.name = items[0].from.name;
+          result[i].consumer.id = items[0]._id;
+          result[i].consumer.type = 'consumer';
+          res();
+        }
+      });
+      p1.then(function(){
+        var p2 = new Promise(function(res,req){
+          LgetThreadLastMsg(item.msgs);
+          function LgetThreadLastMsg(msgs)
+          {
+            // result.forEach(function(rec)
+            // {
+            //   var query = MsgDB.find({"thread_id": rec.thread_id}).limit(1).sort({"sent": -1});
+            //   query.exec(LonThreadLastMessage);
+            // });
+            var query = MsgDB.find().in("_id",msgs).limit(1).sort({"sent": -1});
+               query.exec(LonThreadLastMessage);
+          }
+
+          function LonThreadLastMessage(err,item)
+          {
+            result[i].last_message = {};
+            result[i].last_message.sent = item[0].sent.getTime()/1000|0;
+            result[i].last_message.type = item[0].type;
+            result[i].last_message.message = item[0].message;
+            result[i].last_message.sender = item[0].sender;
+            result[i].last_message.id = item[0]._id;
+            // console.log(result);
+            res();
+          }
+        });
+        p2.then(function(){if (i==result.length-1) finish(); comsole.log("PROM END");})
+      });
+      //LgetConsumer(item.consumer,i);
+
     });
+  //  finish();
 
   }
-  var tekI;
-  function LgetConsumer(consumer_id,i)
-  {
-    tekI = i;
-    console.log(consumer_id);
-    var query = ChanelDB.find({"_id":consumer_id}).limit(1);
-    query.exec(LonConsumer);
-    console.log("LgetConsumer");
-  }
-  function LonConsumer(err,items)
-  {
-    console.log("i " + tekI);
-    console.log(items[0]);
-    result[tekI].consumer = {};
-    result[tekI].consumer.name = items[0].from.name;
-    result[tekI].consumer.id = items[0].from._id;
-    result[tekI].consumer.type = 'consumer';
-    console.log("LonConsumer");
-  }
+  // var tekI;
 
-  function LgetThreadLastMsg(msgs)
-  {
-    // result.forEach(function(rec)
-    // {
-    //   var query = MsgDB.find({"thread_id": rec.thread_id}).limit(1).sort({"sent": -1});
-    //   query.exec(LonThreadLastMessage);
-    // });
-    console.log("LgetThreadLastMsg");
-    var query = MsgDB.find().in("_id",msgs).limit(1).sort({"sent": -1});
-       query.exec(LonThreadLastMessage);
-  }
 
-  function LonThreadLastMessage(err,item)
-  {
-    console.log("LonThreadLastMessage " + item.length);
-    result[result.length-1].last_message = {};
-    result[result.length-1].last_message.sent = item[0].sent;
-    result[result.length-1].last_message.type = item[0].type;
-    result[result.length-1].last_message.message = item[0].message;
-    result[result.length-1].last_message.sender = item[0].sender;
-    result[result.length-1].last_message.id = item[0]._id;
-    finish();
-  }
+
   function finish()
   {
+    // console.log("result");
+    // console.log(result);
+
     res.send(result);
   }
 };
@@ -395,7 +409,7 @@ function getThreadMsgs(req, res, next)
         result.messages[i].sender = item.sender;
         result.messages[i].type = item.type;
         result.messages[i].message = item.message;
-        result.messages[i].sent = item.sent;
+        result.messages[i].sent = item.sent.getTime()/1000|0;
       });
       res.send(201,result);
     });
@@ -408,7 +422,6 @@ function postThreadMsgs(req, res, next)
 {
   //res.send('postThreadMsgs not available');
   var msg = new MsgDB();
-  console.log(req.params.THREAD_ID);
   //msg.thread_id.push(req.params.THREAD_ID);
   msg.type = req.body.type;
   msg.message = req.body.message;
@@ -433,7 +446,6 @@ function postThreadMsgs(req, res, next)
   }
   var reply = {};
   function LauthOk(){
-    console.log("postThreadMsgs "+ req.params.THREAD_ID);
      reply.text = req.body.message;
     ThreadDB.find({"_id": req.params.THREAD_ID}).limit(1).exec(function(err,items){
       findChanel(items);
@@ -449,7 +461,6 @@ function postThreadMsgs(req, res, next)
   {
     if (item==null)
     {
-      console.log("item1 " + item);
       finish(true);
       return;
     }
@@ -459,7 +470,6 @@ function postThreadMsgs(req, res, next)
   }
   function finish(err)
   {
-    console.log(reply);
     if (!err)
     {
       sendMessage1(reply);
