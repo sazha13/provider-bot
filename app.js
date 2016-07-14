@@ -509,15 +509,24 @@ function postThreadMsgs(req, res, next)
   }
   function finish(err)
   {
+    var result = {};
     if (!err)
     {
       sendMessage1(reply);
+      msg.save();
+      ThreadDB.update({"_id":req.params.THREAD_ID},{$push:{msgs:msg._id}},function(err, num){});
+      result.sent = msg.sent.getTime()/1000|0;
+      result.type = msg.type;
+      result.message = msg.message;
+      result.id = msg._id;
+      result.sender = msg.sender;
+
     }
+
     res.contentType = 'application/json';
     res.charset = 'utf-8';
-    res.send(201);
-    msg.save();
-    ThreadDB.update({"_id":req.params.THREAD_ID},{$push:{msgs:msg._id}},function(err, num){});
+    res.send(201,result);
+
   }
 };
 
