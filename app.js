@@ -278,8 +278,11 @@ function getThreads(req, res, next)
 {
   res.contentType = 'application/json';
   res.charset = 'utf-8';
-  console.dir(req.authorization);
+  // console.dir(req.authorization);
   var result = [];
+  var tmpResult = [];
+  var CountLastmesage;
+  var CountConsumer;
   LgetAuth();
   function LgetAuth()
   {
@@ -301,71 +304,107 @@ function getThreads(req, res, next)
   }
 
   function LonThreads(err,items){
+    console.log("LonThreads");
     if (items.length==0)
     {
       finish();
       return;
     }
-    items.forEach(function (item,i)
+    var itemsProcessed = 0;
+    items.forEach(function (item,i,items)
     {
+      // console.log("forEach " + result.length);
+      // console.log("itemsProcessed "+itemsProcessed);
       result.push({});
+      tmpResult.push(item);
       result[i].thread_id = item._id;
       //result[i].name = item.from.name;
-      var p1 = new Promise(function(res,req){
-        LgetConsumer(item.consumer,i);
-        function LgetConsumer(consumer_id,i)
-        {
-          // tekI = i;
-          var query = ChanelDB.find({"_id":consumer_id}).limit(1);
-          query.exec(LonConsumer);
-        }
-        function LonConsumer(err,items)
-        {
-
-          result[i].consumer = {};
-          result[i].consumer.name = items[0].from.name;
-          result[i].consumer.id = items[0]._id;
-          result[i].consumer.type = 'consumer';
-          res();
-        }
-      });
-      p1.then(function(){
-        var p2 = new Promise(function(res,req){
-          LgetThreadLastMsg(item.msgs);
-          function LgetThreadLastMsg(msgs)
-          {
-            // result.forEach(function(rec)
-            // {
-            //   var query = MsgDB.find({"thread_id": rec.thread_id}).limit(1).sort({"sent": -1});
-            //   query.exec(LonThreadLastMessage);
-            // });
-            var query = MsgDB.find().in("_id",msgs).limit(1).sort({"sent": -1});
-               query.exec(LonThreadLastMessage);
-          }
-
-          function LonThreadLastMessage(err,item)
-          {
-            result[i].last_message = {};
-            result[i].last_message.sent = item[0].sent.getTime()/1000|0;
-            result[i].last_message.type = item[0].type;
-            result[i].last_message.message = item[0].message;
-            result[i].last_message.sender = item[0].sender;
-            result[i].last_message.id = item[0]._id;
-            // console.log(result);
-            res();
-          }
-        });
-        p2.then(function(){if (i==result.length-1) finish(); comsole.log("PROM END");})
-      });
-      //LgetConsumer(item.consumer,i);
-
+      if (++itemsProcessed === items.length)
+      {
+        //console.log(tmpResult);
+        LWriteOther();
+      };
     });
-  //  finish();
+    function LWriteOther()
+    {
+      tmpResult.forEach(function(item,i){
+        LgetConsumer(item.consumer,i);
+        LgetThreadLastMsg(item.msgs);
+      });
+    }
 
-  }
-  // var tekI;
+    function LgetConsumer(consumer_id,i)
+    {
+      // tekI = i;
+      CountConsumer = 0;
+      var query = ChanelDB.find({"_id":consumer_id}).limit(1);
+      query.exec(LonConsumer);
+    }
+    function LonConsumer(err,items)
+    {
+      for (var i = 0; i<tmpResult.length; i++)
+      {
+        if (tmpResult[i].consumer != items[0]._id)
+        {
+          continue;
+        }
+        result[i].consumer = {};
+        result[i].consumer.name = items[0].from.name;
+        result[i].consumer.id = items[0]._id;
+        result[i].consumer.type = 'consumer';
+        LCheckConsumers();
+        return;
+      }
+    }
+    function LgetThreadLastMsg(msgs)
+    {
 
+      CountLastmesage = 0;
+      var query = MsgDB.find().in("_id",msgs).limit(1).sort({"sent": -1});
+         query.exec(LonThreadLastMessage);
+    }
 
+    function LonThreadLastMessage(err,item)
+    {
+      // console.log(item);
+      for (var i = 0; i<tmpResult.length; i++)
+      {
+        if (tmpResult[i].msgs.indexOf(item[0]._id)==-1)
+        {
+          continue;
+        }
+        tmpResult[i].msgs = [];
+        result[i].last_message = {};
+        result[i].last_message.sent = item[0].sent.getTime()/1000|0;
+        result[i].last_message.type = item[0].type;
+        result[i].last_message.message = item[0].message;
+        result[i].last_message.sender = item[0].sender;
+        result[i].last_message.id = item[0]._id;
+        LCheckLastMsgs();
+        return;
+      }
+      // console.log(result);
+    }
+
+    function LCheckLastMsgs()
+    {
+      CountLastmesage++;
+        WaitAll();
+    }
+    function LCheckConsumers()
+    {
+      CountConsumer++;
+        WaitAll();
+    }
+    function WaitAll()
+    {
+      // console.log("CountLastmesage " + CountLastmesage);
+      // console.log("CountConsumer " + CountConsumer);
+      if (CountLastmesage == result.length && CountConsumer == result.length)
+        finish();
+    }
+
+    };
 
   function finish()
   {
