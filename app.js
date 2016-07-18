@@ -124,6 +124,7 @@ function AddMsgInDB(ChanelId, msg)
     record.sender.type = 'consumer';
     record.fromUser = true;
     record.id = msg.id;
+    record.attachments = msg.attachments;
     record.save();
     // ProviderDB.find().exec(function(err,items){
     //   items.forEach(function(item){
@@ -200,6 +201,7 @@ var SchemaMsg = new mongoose.Schema({
   //thread_id : [String],
   type: {type: String},
   message: {type: String},
+  attachments: [],
   sender : {
       name:{type: String},
       id:{type: String},
@@ -380,6 +382,9 @@ function getThreads(req, res, next)
         result[i].last_message.message = item[0].message;
         result[i].last_message.sender = item[0].sender;
         result[i].last_message.id = item[0]._id;
+        result[i].last_message.attachments = [];
+        if (item[0].attachments!=null)
+        	result[i].last_message.attachments = item[0].attachments;
         LCheckLastMsgs();
         return;
       }
@@ -448,6 +453,7 @@ function getThreadMsgs(req, res, next)
         result.messages[i].sender = item.sender;
         result.messages[i].type = item.type;
         result.messages[i].message = item.message;
+        result.messages[i].attachments = item.attachments;
         result.messages[i].sent = item.sent.getTime()/1000|0;
       });
       res.send(201,result);
