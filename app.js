@@ -471,6 +471,9 @@ function postThreadMsgs(req, res, next)
   msg.type = req.body.type;
   msg.message = req.body.message;
   msg.fromUser = false;
+  msg.attachments = [];
+  if (req.body.attachments != null)
+    msg.attachments = req.body.attachments;
 
 
   LgetAuth();
@@ -526,6 +529,7 @@ function postThreadMsgs(req, res, next)
       result.message = msg.message;
       result.id = msg._id;
       result.sender = msg.sender;
+      result.attachments = msg.attachments;
 
     }
 
