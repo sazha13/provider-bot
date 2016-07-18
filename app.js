@@ -469,7 +469,7 @@ function postThreadMsgs(req, res, next)
   var msg = new MsgDB();
   //msg.thread_id.push(req.params.THREAD_ID);
   msg.type = req.body.type;
-  msg.message = req.body.message;
+  msg.message = (req.body.message !=null)?req.body.message:"";
   msg.fromUser = false;
   msg.attachments = [];
   if (req.body.attachments != null)
