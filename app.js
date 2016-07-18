@@ -495,6 +495,7 @@ function postThreadMsgs(req, res, next)
   var reply = {};
   function LauthOk(){
      reply.text = req.body.message;
+     reply.attachments = msg.attachments;
     ThreadDB.find({"_id": req.params.THREAD_ID}).limit(1).exec(function(err,items){
       findChanel(items);
     });
