@@ -49,8 +49,8 @@ server.listen(port, function() {
 // bot creation
 var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
 bot.add('/', function (session) {
-    //session.send('Provider bot in operation :-)');
-	session.message.BotPerUserInConversationData = null;
+    session.send('Provider bot in operation :-)');
+	//session.message.BotPerUserInConversationData = null;
     var from1 = session.message;
     var recvedMsg = session.message;
     ServerMsg = 'HERE';
