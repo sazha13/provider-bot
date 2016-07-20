@@ -4,7 +4,6 @@ var builder = require('botbuilder');
 var mongoose = require('mongoose');
 var msRest = require('ms-rest');
 var connector = require('botconnector');
-// var express = require('express');
 
 // constants
 var port = process.env.PORT || 3000;
@@ -22,7 +21,6 @@ function handleRequestMessage(req, res, next) {
 }
 
 var server = restify.createServer();
-// var server = express.createServer();
 
 server.get('/', respond);
 server.post('/request', handleRequestMessage);
@@ -32,14 +30,14 @@ server.use(restify.authorizationParser());
 // server.use(restify.dateParser());
   // server.use(restify.queryParser());
   // server.use(restify.authorizationParser());
-// server.post('/sendMessageToCustomer/:ProviderId', sendMessageFromProvider);
-// server.get('/getContent/:ProviderId',getContentMsg);
+
 /// New API
 server.get('/thread',getThreads);
 server.get('/thread/:THREAD_ID/messages',getThreadMsgs);
 server.post('/thread/:THREAD_ID/messages',postThreadMsgs);
 server.post('/apns',postAPNs);
 server.post('/createProvider',postCreateProvider);
+server.post('/thread/:THREAD_ID/message_seen/:MSG_ID',postThreadMsgSeen);
 
 server.listen(port, function() {
   console.log('%s listening at %s', server.name, server.url);
@@ -56,19 +54,6 @@ bot.add('/', function (session) {
     var recvedMsg = session.message;
     ServerMsg = 'HERE';
 
-    // MyMonngooseShema.findOne({ 'from.address': from1.from.address }, function(err, exmpl1) {
-    //   if (err) return console.error(err);
-    //   if (exmpl1 == null)
-    //   {
-    //     var item = new MyMonngooseShema(from1);
-    //     item.save();
-    //     ServerMsg = 'NEW RECORD ADD';
-    //     //session.send('NEW RECORD ADD');
-    //   };
-    // });
-    // var msg1 = new MsgTmpShema(from1);
-    // msg1.unRead = true;
-    // msg1.save();
     //new API
     ChanelDB.findOne({ 'from.address': recvedMsg.from.address }, function(err, item) {
       if (err) return console.error(err);
@@ -104,7 +89,7 @@ bot.add('/', function (session) {
       ProviderDB.find().exec(AddThread);
         function AddThread(err,items){
           items.forEach(function(item){
-            var record = new ThreadDB({"consumer": chanelId, "provider": item._id, "msgs":[msgid]});
+            var record = new ThreadDB({"consumer": chanelId, "provider": item._id, "msgs":[msgid], "last_seen":"0"});
             record.save();
           });
         }
@@ -157,35 +142,7 @@ db.on('error', console.error);
 db.once('open', function() {
   console.log("connection DB ok");
 });
-// var providersSchemaMsg = new mongoose.Schema({
-//   from:{name: String,
-//   channelId: String,
-//   address: String,
-//   id: String,
-//   isBot: Boolean},
-//   to: {name: String,
-//   channelId: String,
-//   address: String,
-//   id: String,
-//   isBot: Boolean},
-//   id: {type: String}
-//   });
-//
-//   var SchemaMsgTMP = new mongoose.Schema({
-//     from:{name: String,
-//     channelId: String,
-//     address: String,
-//     id: String,
-//     isBot: Boolean},
-//     to: {name: String,
-//     channelId: String,
-//     address: String,
-//     id: String,
-//     isBot: Boolean},
-//     id: {type: String},
-//     unRead: {type: Boolean},
-//     text: {type: String}
-//     });
+
 var SchemaChanel = new mongoose.Schema({
   from:{name: String,
   channelId: String,
@@ -225,15 +182,16 @@ var SchemaAPNS = new mongoose.Schema({
 var SchemaThread = new mongoose.Schema({
   consumer: {type: String},
   provider: {type: String},
-  msgs: [String]
+  msgs: [String],
+  last_seen: {type: String}
 });
-// var MyMonngooseShema = mongoose.model('ShemaMsg', providersSchemaMsg);
-// var MsgTmpShema = mongoose.model('MsgTmpShema', SchemaMsgTMP);
+
 var MsgDB = mongoose.model('MsgSchema',SchemaMsg);
 var ChanelDB = mongoose.model('ChanelSchema',SchemaChanel);
 var ProviderDB = mongoose.model('ProviderSchema',SchemaProvider);
 var APNS = mongoose.model('APNSSchema',SchemaAPNS);
 var ThreadDB = mongoose.model('ThreadSchema',SchemaThread);
+
 function GetThreadLastMsg(threadId)
 {
   var query = MsgDB.find({"ThreadId": threadId}).limit(1).select('created text').sort({"created": -1});
@@ -282,7 +240,6 @@ function getThreads(req, res, next)
 {
   res.contentType = 'application/json';
   res.charset = 'utf-8';
-  // console.dir(req.authorization);
   var result = [];
   var tmpResult = [];
   var CountLastmesage;
@@ -308,7 +265,6 @@ function getThreads(req, res, next)
   }
 
   function LonThreads(err,items){
-    console.log("LonThreads");
     if (items.length==0)
     {
       finish();
@@ -321,6 +277,7 @@ function getThreads(req, res, next)
       // console.log("itemsProcessed "+itemsProcessed);
       result.push({});
       tmpResult.push(item);
+      tmpResult[i].last_seen = (item.last_seen == null)?0:item.last_seen;
       result[i].thread_id = item._id;
       //result[i].name = item.from.name;
       if (++itemsProcessed === items.length)
@@ -364,7 +321,7 @@ function getThreads(req, res, next)
     {
 
       CountLastmesage = 0;
-      var query = MsgDB.find().in("_id",msgs).limit(1).sort({"sent": -1});
+      var query = MsgDB.find().in("_id",msgs).sort({"sent": -1});
          query.exec(LonThreadLastMessage);
     }
 
@@ -387,6 +344,9 @@ function getThreads(req, res, next)
         result[i].last_message.attachments = [];
         if (item[0].attachments!=null)
         	result[i].last_message.attachments = item[0].attachments;
+        //result[i].last_message.unseen_count = 0;
+        for (result[i].last_message.unseen_count = 0; result[i].last_message.unseen_count<item.length && item[result[i].last_message.unseen_count]._id>tmpResult[i].last_seen; result[i].last_message.unseen_count++);
+        
         LCheckLastMsgs();
         return;
       }
@@ -428,6 +388,7 @@ function getThreadMsgs(req, res, next)
   res.contentType = 'application/json';
   res.charset = 'utf-8';
   LgetAuth();
+  var last_seen = 0;
   function LgetAuth()
   {
     var query = ProviderDB.find({"username":req.authorization.basic.username, "password":req.authorization.basic.password}).limit(1).select('_id')
@@ -442,22 +403,33 @@ function getThreadMsgs(req, res, next)
   }
   function LauthOk(){
     ThreadDB.find({"_id": req.params.THREAD_ID}).limit(1).exec(function(err,items){
+    	last_seen = items[0].last_seen;
       findmsgs(items[0].msgs);
     });
   }
   function findmsgs(msgsId)
   {
-    MsgDB.find().in("_id",msgsId).sort({"sent":-1}).exec(function(err,items){
-      items.forEach(function(item){
-        result.messages.push({});
-        var i = result.messages.length-1;
-        result.messages[i].id = item._id;
-        result.messages[i].sender = item.sender;
-        result.messages[i].type = item.type;
-        result.messages[i].message = item.message;
-        result.messages[i].attachments = item.attachments;
-        result.messages[i].sent = item.sent.getTime()/1000|0;
-      });
+    
+	  MsgDB.find().in("_id",msgsId).sort({"sent":-1}).exec(function(err,items){
+      //items.forEach(function(item)
+    	for (var i = 0; i<items.length; i++){
+    		var item = items[i];
+    		result.messages.push({});
+    		//var i = result.messages.length-1;
+    		result.messages[i].id = item._id;
+    		result.messages[i].sender = item.sender;
+    		result.messages[i].type = item.type;
+    		result.messages[i].message = item.message;
+    		result.messages[i].attachments = item.attachments;
+    		result.messages[i].sent = item.sent.getTime()/1000|0;
+    		if (item._id>last_seen)
+    		{
+    			result.messages[i].seen = 0;
+    		}
+    		else
+    			result.messages[i].seen = 1;
+    		
+      };
       res.send(201,result);
     });
 
@@ -558,38 +530,53 @@ function postAPNs(req, res, next)
   res.send(201);
 };
 
+function postThreadMsgSeen(req, res, next)
+{
+	console.log("thread "+ req.params.THREAD_ID + " MSG "+req.params.MSG_ID);
+	res.contentType = 'application/json';
+    res.charset = 'utf-8';
+	LgetAuth();
+	function LgetAuth()
+	{
+		if (req.authorization==null)
+		{
+			res.send(401);
+			return;
+		}
+		var query = ProviderDB.find({"username":req.authorization.basic.username, "password":req.authorization.basic.password}).limit(1).select('_id')
+		query.exec(function(err,items){
+			if (items.length == 0)
+				res.send(401);
+			else
+			{
+								
+				LauthOk(items[0]._id);
+			}
+		});
+	}
+	function LauthOk(providerId){
+		var query = ThreadDB.find({"provider":providerId,"_id":req.params.THREAD_ID}).limit(1);
+		query.exec(function(err,items){
+			if (err || items[0]==null)
+			{
+				res.send(406);
+				return;
+			};
+			if (items[0].msgs.indexOf(req.params.MSG_ID)==-1)
+	        {
+	          res.send(406);
+	          return;
+	        }
+			items[0].last_seen = req.params.MSG_ID;
+			items[0].save();
+			res.send(200);
+		});
+	}
+	
+}
+
 ///END new API function
-// function getContentMsg(req, res, next)
-// {
-//
-//   MsgTmpShema.find().sort({"from.address": 1}).exec(function(err,items)
-//   {
-//     res.contentType = 'application/json';
-//         res.charset = 'utf-8';
-//         res.send(items);
-//         for (var i = 0; i<items.length; i++)
-//         {
-//           items[i].unRead = false;
-//           items[i].save();
-//         }
-//         res.send(items);
-//   });
-// }
-// function sendMessageFromProvider(req, res, next)
-// {
-//
-//   console.log(req.body.text);
-//
-//
-//   var reply = {
-//                   replyToMessageId: req.body.id,
-//                   to: req.body.from,
-//                   from: req.body.to,
-//                   text: req.body.text
-//               };
-//               sendMessage1(reply);
-//   res.send('Message maybe sended');
-// };
+
 var sendMessage1 = function(msg, cb)
 {
     var client = new connector(credentials);
@@ -604,29 +591,6 @@ var sendMessage1 = function(msg, cb)
     });
     //console.dir(msg.to);
 };
-// var OnTimer1 = function()
-// {
-//   MyMonngooseShema.find(function(err, exmpl1) {
-//     if (err) return console.error(err);
-//     // console.dir(exmpl1);
-//     for (var i = 0; i<exmpl1.length; i++)
-//     {
-//         console.log("record %d send to chatid %s username %s",i,exmpl1[i].from.channelId,exmpl1[i].from.name);
-//         var reply = {
-//                 replyToMessageId: exmpl1[i].id,
-//                 to: exmpl1[i].from,
-//                 from: exmpl1[i].to,
-//                 text: 'timeout spam'
-//             };
-//             //console.dir(exmpl1.to);
-//         sendMessage1(reply);
-//     };
-//
-//   });
-//   //clearTimeout(timeout1);
-// };
-//
-// var timeout1 = null;// = setInterval(OnTimer1,10*1000);
 // Setup Restify Server
 server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
 mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
