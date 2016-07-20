@@ -346,7 +346,7 @@ function getThreads(req, res, next)
         	result[i].last_message.attachments = item[0].attachments;
         //result[i].last_message.unseen_count = 0;
         for (result[i].unseen_count = 0; result[i].unseen_count<item.length && item[result[i].unseen_count]._id>tmpResult[i].last_seen; result[i].unseen_count++);
-        
+        result[i].last_message.seen = (result[i].unseen_count > 0)?0:1;
         LCheckLastMsgs();
         return;
       }
@@ -505,6 +505,7 @@ function postThreadMsgs(req, res, next)
       result.id = msg._id;
       result.sender = msg.sender;
       result.attachments = msg.attachments;
+      result.seen = 1;
 
     }
 
