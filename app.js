@@ -346,7 +346,7 @@ function getThreads(req, res, next)
         	result[i].last_message.attachments = item[0].attachments;
         //result[i].last_message.unseen_count = 0;
         for (result[i].unseen_count = 0; result[i].unseen_count<item.length && item[result[i].unseen_count]._id>tmpResult[i].last_seen; result[i].unseen_count++);
-        result[i].last_message.seen = (result[i].unseen_count > 0)?0:1;
+        result[i].last_message.unseen = (result[i].unseen_count > 0)?1:0;
         LCheckLastMsgs();
         return;
       }
@@ -409,7 +409,7 @@ function getThreadMsgs(req, res, next)
   }
   function findmsgs(msgsId)
   {
-    
+
 	  MsgDB.find().in("_id",msgsId).sort({"sent":-1}).exec(function(err,items){
       //items.forEach(function(item)
     	for (var i = 0; i<items.length; i++){
@@ -424,11 +424,11 @@ function getThreadMsgs(req, res, next)
     		result.messages[i].sent = item.sent.getTime()/1000|0;
     		if (item._id>last_seen)
     		{
-    			result.messages[i].seen = 0;
+    			result.messages[i].unseen = 1;
     		}
     		else
-    			result.messages[i].seen = 1;
-    		
+    			result.messages[i].unseen = 0;
+
       };
       res.send(201,result);
     });
@@ -505,7 +505,7 @@ function postThreadMsgs(req, res, next)
       result.id = msg._id;
       result.sender = msg.sender;
       result.attachments = msg.attachments;
-      result.seen = 1;
+      result.unseen = 0;
 
     }
 
@@ -550,7 +550,7 @@ function postThreadMsgSeen(req, res, next)
 				res.send(401);
 			else
 			{
-								
+
 				LauthOk(items[0]._id);
 			}
 		});
@@ -573,7 +573,7 @@ function postThreadMsgSeen(req, res, next)
 			res.send(200);
 		});
 	}
-	
+
 }
 
 ///END new API function
