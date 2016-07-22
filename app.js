@@ -344,9 +344,13 @@ function getThreads(req, res, next)
         result[i].last_message.attachments = [];
         if (item[0].attachments!=null)
         	result[i].last_message.attachments = item[0].attachments;
-        //result[i].last_message.unseen_count = 0;
-        for (result[i].unseen_count = 0; result[i].unseen_count<item.length && item[result[i].unseen_count]._id>tmpResult[i].last_seen; result[i].unseen_count++);
-        result[i].last_message.unseen = (result[i].unseen_count > 0)?1:0;
+        result[i].unseen_count = 0;
+        for (var j = 0; j<item.length && item[j]._id>tmpResult[i].last_seen; j++)
+        {
+          if (item[j].fromUser == true)
+            result[i].unseen_count++
+        }
+        result[i].last_message.unseen = (result[i].unseen_count > 0 && item[0].fromUser)?1:0;
         LCheckLastMsgs();
         return;
       }
@@ -422,12 +426,7 @@ function getThreadMsgs(req, res, next)
     		result.messages[i].message = item.message;
     		result.messages[i].attachments = item.attachments;
     		result.messages[i].sent = item.sent.getTime()/1000|0;
-    		if (item._id>last_seen)
-    		{
-    			result.messages[i].unseen = 1;
-    		}
-    		else
-    			result.messages[i].unseen = 0;
+    		result.messages[i].unseen = (item.fromUser && item._id>last_seen)?1:0;
 
       };
       res.send(201,result);
