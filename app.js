@@ -4,6 +4,15 @@ var builder = require('botbuilder');
 var mongoose = require('mongoose');
 var msRest = require('ms-rest');
 var connector = require('botconnector');
+var apns = require("apns");
+
+var options = {
+   keyFile : "cert/213.key.pem",
+   certFile : "cert/213.crt.pem",
+   debug : true
+};
+
+var connection = new apns.Connection(options);
 
 // constants
 var port = process.env.PORT || 3000;
@@ -49,6 +58,22 @@ var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da87
 bot.add('/', function (session) {
 //    session.send('Provider bot in operation :-)');
 	session.send();
+//just test APNS
+var notification = new apns.Notification();
+notification.alert = "Hello World !";
+APNSDB.find().exec(function(err, items){
+    items.forEach(function(item){
+      console.log(item.token);
+      notification.device = new apns.Device(item.token);
+      connection.sendNotification(notification);
+    });
+});
+//
+//
+
+//end test
+
+
 	//session.message.BotPerUserInConversationData = null;
     var from1 = session.message;
     var recvedMsg = session.message;
@@ -189,7 +214,7 @@ var SchemaThread = new mongoose.Schema({
 var MsgDB = mongoose.model('MsgSchema',SchemaMsg);
 var ChanelDB = mongoose.model('ChanelSchema',SchemaChanel);
 var ProviderDB = mongoose.model('ProviderSchema',SchemaProvider);
-var APNS = mongoose.model('APNSSchema',SchemaAPNS);
+var APNSDB = mongoose.model('APNSSchema',SchemaAPNS);
 var ThreadDB = mongoose.model('ThreadSchema',SchemaThread);
 
 function GetThreadLastMsg(threadId)
@@ -519,10 +544,10 @@ function postAPNs(req, res, next)
 {
   if (req.body.token==null)
     return res.send(201);
-  ProviderDB.find({"token": req.body.token}).limit(1).exec(function(err,items){
+  APNSDB.find({"token": req.body.token}).limit(1).exec(function(err,items){
     if (items.length==0)
     {
-      var provider = new ProviderDB({});
+      var provider = new APNSDB({});
       provider.token = req.body.token;
       provider.save();
     }

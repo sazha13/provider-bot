@@ -22,6 +22,7 @@
     "npm": "3.9.5"
   },
   "dependencies": {
+    "apns": "^0.1.0",
     "botbuilder": "^1.0.1",
     "botconnector": "^0.9.6",
     "mongoose": "^4.5.2",
