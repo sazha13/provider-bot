@@ -5,7 +5,7 @@ var mongoose = require('mongoose');
 var msRest = require('ms-rest');
 var connector = require('botconnector');
 var apns = require("apns");
-var WebSocketServer = require('ws').Server; 
+var WebSocketServer = require('ws').Server;
 
 var options = {
    keyFile : "cert/213.key.pem",
@@ -16,7 +16,7 @@ var options = {
 var connection = new apns.Connection(options);
 
 var PORTWS = process.env.PORTWS || 8081;
-var wss = new WebSocketServer({port: PORTWS});
+var wss = new WebSocketServer({port: PORTWS,server: server});
 
 wss.on('connection', function (ws) {
     console.log("WS connection add");
@@ -71,7 +71,7 @@ bot.add('/', function (session) {
 	notification.alert = "Hello World !";
 	APNSDB.find().exec(function(err, items){
 		items.forEach(function(item){
-			console.log(item.token);
+			//console.log(item.token);
 			notification.device = new apns.Device(item.token);
 			connection.sendNotification(notification);
 		});
@@ -83,8 +83,8 @@ bot.add('/', function (session) {
 	//session.message.BotPerUserInConversationData = null;
     var from1 = session.message;
     var recvedMsg = session.message;
-    
-    
+
+
     ServerMsg = 'HERE';
 
     //new API
@@ -110,7 +110,7 @@ bot.add('/', function (session) {
         else
         {
           var msgid = AddUserMsgInDB(chanelId,recvedMsg);
-          ThreadDB.update({"consumer":chanelId},{$push:{msgs:msgid}},function(err, num){console.dir(num);});
+          ThreadDB.update({"consumer":chanelId},{$push:{msgs:msgid}},function(err, num){});
         }
       }
 
@@ -160,10 +160,12 @@ function AddUserMsgInDB(ChanelId, msg)
     //   });
     // });
     // ThreadDB.update({"consumer":record.ChanelId},{$push:{msgs:record._id}},function(err, num){console.dir(num);});
+    var record1 = JSON.parse(JSON.stringify(record));;
+    record1.sent = record.sent.getTime()/1000|0;
     wss.clients.forEach(SendWSMsg);
     function SendWSMsg(client)
     {
-    	var res = {"command": 'new_message',"data":record};
+    	var res = {"command": 'new_message',"data":record1};
     	client.send(JSON.stringify(res));
     }
     return record._id;
