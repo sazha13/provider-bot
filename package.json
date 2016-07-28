@@ -27,6 +27,7 @@
     "botconnector": "^0.9.6",
     "mongoose": "^4.5.2",
     "ms-rest": "^1.14.3",
-    "restify": "^4.1.0"
+    "restify": "^4.1.0",
+    "ws": "~1.1.1"
   }
 }

@@ -5,6 +5,7 @@ var mongoose = require('mongoose');
 var msRest = require('ms-rest');
 var connector = require('botconnector');
 var apns = require("apns");
+var WebSocketServer = require('ws').Server; 
 
 var options = {
    keyFile : "cert/213.key.pem",
@@ -14,8 +15,15 @@ var options = {
 
 var connection = new apns.Connection(options);
 
+var PORTWS = process.env.PORTWS || 8087;
+var wss = new WebSocketServer({port: PORTWS});
+
+wss.on('connection', function (ws) {
+    console.log("WS connection add");
+});
+
 // constants
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 3011;
 var ServerMsg = 'This is provider-bot :)';
 function respond(req, res, next) {
   res.contentType = "text/plain";
@@ -59,17 +67,15 @@ bot.add('/', function (session) {
 //    session.send('Provider bot in operation :-)');
 	session.send();
 //just test APNS
-var notification = new apns.Notification();
-notification.alert = "Hello World !";
-APNSDB.find().exec(function(err, items){
-    items.forEach(function(item){
-      console.log(item.token);
-      notification.device = new apns.Device(item.token);
-      connection.sendNotification(notification);
-    });
-});
-//
-//
+	var notification = new apns.Notification();
+	notification.alert = "Hello World !";
+	APNSDB.find().exec(function(err, items){
+		items.forEach(function(item){
+			console.log(item.token);
+			notification.device = new apns.Device(item.token);
+			connection.sendNotification(notification);
+		});
+	});
 
 //end test
 
@@ -77,6 +83,8 @@ APNSDB.find().exec(function(err, items){
 	//session.message.BotPerUserInConversationData = null;
     var from1 = session.message;
     var recvedMsg = session.message;
+    
+    
     ServerMsg = 'HERE';
 
     //new API
@@ -87,12 +95,10 @@ APNSDB.find().exec(function(err, items){
         var record = new ChanelDB(recvedMsg);
         record.save();
         CheckThreads(record.id,recvedMsg);
-        //AddMsgInDB(record.id,recvedMsg);
       }
       else
       {
         CheckThreads(item.id,recvedMsg);
-        //AddMsgInDB(item.id,recvedMsg);
       }
     });
     function CheckThreads(chanelId,recvedMsg)
@@ -103,14 +109,14 @@ APNSDB.find().exec(function(err, items){
           CreateNewThreads(chanelId,recvedMsg);
         else
         {
-          var msgid = AddMsgInDB(chanelId,recvedMsg);
+          var msgid = AddUserMsgInDB(chanelId,recvedMsg);
           ThreadDB.update({"consumer":chanelId},{$push:{msgs:msgid}},function(err, num){console.dir(num);});
         }
       }
 
     }
     function CreateNewThreads(chanelId,recvedMsg){
-      var msgid = AddMsgInDB(chanelId,recvedMsg);
+      var msgid = AddUserMsgInDB(chanelId,recvedMsg);
       ProviderDB.find().exec(AddThread);
         function AddThread(err,items){
           items.forEach(function(item){
@@ -124,7 +130,7 @@ APNSDB.find().exec(function(err, items){
 
 });
 
-function AddMsgInDB(ChanelId, msg)
+function AddUserMsgInDB(ChanelId, msg)
 {
     var record = new MsgDB();
     //record.sent = msg.created;
@@ -154,6 +160,12 @@ function AddMsgInDB(ChanelId, msg)
     //   });
     // });
     // ThreadDB.update({"consumer":record.ChanelId},{$push:{msgs:record._id}},function(err, num){console.dir(num);});
+    wss.clients.forEach(SendWSMsg);
+    function SendWSMsg(client)
+    {
+    	var res = {"command": 'new_message',"data":record};
+    	client.send(JSON.stringify(res));
+    }
     return record._id;
 };
 
@@ -463,8 +475,7 @@ function getThreadMsgs(req, res, next)
 
 function postThreadMsgs(req, res, next)
 {
-  //res.send('postThreadMsgs not available');
-  var msg = new MsgDB();
+  var msg = new MsgDB({});
   //msg.thread_id.push(req.params.THREAD_ID);
   msg.type = req.body.type;
   msg.message = (req.body.message !=null)?req.body.message:"";
@@ -472,7 +483,6 @@ function postThreadMsgs(req, res, next)
   msg.attachments = [];
   if (req.body.attachments != null)
     msg.attachments = req.body.attachments;
-
 
   LgetAuth();
   function LgetAuth()
@@ -530,7 +540,6 @@ function postThreadMsgs(req, res, next)
       result.sender = msg.sender;
       result.attachments = msg.attachments;
       result.unseen = 0;
-
     }
 
     res.contentType = 'application/json';
