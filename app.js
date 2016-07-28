@@ -15,7 +15,7 @@ var options = {
 
 var connection = new apns.Connection(options);
 
-var PORTWS = process.env.PORTWS || 8087;
+var PORTWS = process.env.PORTWS || 8081;
 var wss = new WebSocketServer({port: PORTWS});
 
 wss.on('connection', function (ws) {
