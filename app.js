@@ -15,12 +15,8 @@ var options = {
 
 var connection = new apns.Connection(options);
 
-var PORTWS = process.env.PORTWS || 8081;
-var wss = new WebSocketServer({port: PORTWS,server: server});
 
-wss.on('connection', function (ws) {
-    console.log("WS connection add");
-});
+
 
 // constants
 var port = process.env.PORT || 3011;
@@ -60,6 +56,12 @@ server.listen(port, function() {
   console.log('%s listening at %s', server.name, server.url);
 
 });
+//var PORTWS = process.env.PORTWS || 8081;
+var wss = new WebSocketServer({server});
+wss.on('connection', function (ws) {
+    console.log("WS connection add");
+});
+
 
 // bot creation
 var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
