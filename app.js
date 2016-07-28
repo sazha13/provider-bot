@@ -59,7 +59,10 @@ server.listen(port, function() {
 //var PORTWS = process.env.PORTWS || 8081;
 var wss = new WebSocketServer({server});
 wss.on('connection', function (ws) {
-    console.log("WS connection add");
+    console.log("WS connection add " + wss.clients.length);
+    ws.on('close',function(code,message){
+      console.log("WS CLOSE " + wss.clients.length);
+    });
 });
 
 
