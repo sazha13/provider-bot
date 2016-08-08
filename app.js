@@ -1,62 +1,27 @@
-// imports
 var restify = require('restify');
 var builder = require('botbuilder');
 var mongoose = require('mongoose');
-var msRest = require('ms-rest');
-var connector = require('botconnector');
 var apns = require("apns");
 var WebSocketServer = require('ws').Server;
+
+//constants data
+
+var port = process.env.PORT || 3011;
+var msAppId = process.env.MICROSOFT_APP_ID;
+var msAppPassword = process.env.MICROSOFT_APP_PASSWORD;
 
 var options = {
    keyFile : "cert/213.key.pem",
    certFile : "cert/213.crt.pem",
    debug : true
 };
-
-var connection = new apns.Connection(options);
-
-
-
-
-// constants
-var port = process.env.PORT || 3011;
-var ServerMsg = 'This is provider-bot :)';
-function respond(req, res, next) {
-  res.contentType = "text/plain";
-  res.send(ServerMsg);
-  next();
-}
-
-// post request
-function handleRequestMessage(req, res, next) {
-  res.send('POST API Response!!!');
-  next();
-}
-
+//Setup Restify Server
 var server = restify.createServer();
-
-server.get('/', respond);
-server.post('/request', handleRequestMessage);
-server.use(restify.acceptParser(server.acceptable));
-server.use(restify.bodyParser());
-server.use(restify.authorizationParser());
-// server.use(restify.dateParser());
-  // server.use(restify.queryParser());
-  // server.use(restify.authorizationParser());
-
-/// New API
-server.get('/thread',getThreads);
-server.get('/thread/:THREAD_ID/messages',getThreadMsgs);
-server.post('/thread/:THREAD_ID/messages',postThreadMsgs);
-server.post('/apns',postAPNs);
-server.post('/createProvider',postCreateProvider);
-server.post('/thread/:THREAD_ID/message_seen/:MSG_ID',postThreadMsgSeen);
-
-server.listen(port, function() {
-  console.log('%s listening at %s', server.name, server.url);
-
+server.listen(process.env.port || process.env.PORT || 3978, function () {
+   console.log('%s listening to %s', server.name, server.url);
 });
-//var PORTWS = process.env.PORTWS || 8081;
+
+//WebSocket
 var wss = new WebSocketServer({server});
 wss.on('connection', function (ws) {
     console.log("WS connection add " + wss.clients.length);
@@ -65,191 +30,56 @@ wss.on('connection', function (ws) {
     });
 });
 
+//APNS
+var connection = new apns.Connection(options);
 
-// bot creation
-var bot = new builder.BotConnectorBot({ appId: 'ProivderBot', appSecret: '27da870722c84fa5b7f33bb1e8f3bbd8' });
-bot.add('/', function (session) {
-//    session.send('Provider bot in operation :-)');
-	session.send();
-//just test APNS
-	var notification = new apns.Notification();
-	notification.alert = "Hello World !";
-	APNSDB.find().exec(function(err, items){
-		items.forEach(function(item){
-			//console.log(item.token);
-			notification.device = new apns.Device(item.token);
-			connection.sendNotification(notification);
-		});
-	});
+// Create chat bot
+var connector = new builder.ChatConnector({appId: msAppId, appPassword: msAppPassword});
+var bot = new builder.UniversalBot(connector);
 
-//end test
+server.post('/api/messages', connector.listen());
 
+bot.dialog('/', botDialog);
 
-	//session.message.BotPerUserInConversationData = null;
-    var from1 = session.message;
-    var recvedMsg = session.message;
+//REST API
+server.get('/', respond);
+server.post('/request', handleRequestMessage);
 
+server.use(restify.acceptParser(server.acceptable));
+server.use(restify.bodyParser());
+server.use(restify.authorizationParser());
 
-    ServerMsg = 'HERE';
+server.get('/thread',getThreads);
+server.get('/thread/:THREAD_ID/messages',getThreadMsgs);
+server.post('/thread/:THREAD_ID/messages',postThreadMsgs);
+server.post('/apns',postAPNs);
+server.post('/createProvider',postCreateProvider);
+server.post('/thread/:THREAD_ID/message_seen/:MSG_ID',postThreadMsgSeen);
 
-    //new API
-    ChanelDB.findOne({ 'from.address': recvedMsg.from.address }, function(err, item) {
-      if (err) return console.error(err);
-      if (item == null)
-      {
-        var record = new ChanelDB(recvedMsg);
-        record.save();
-        CheckThreads(record.id,recvedMsg);
-      }
-      else
-      {
-        CheckThreads(item.id,recvedMsg);
-      }
-    });
-    function CheckThreads(chanelId,recvedMsg)
-    {
-      ThreadDB.find({"consumer" : chanelId}).exec(LonFindConsumers);
-      function LonFindConsumers(err,items){
-        if (items.length==0)
-          CreateNewThreads(chanelId,recvedMsg);
-        else
-        {
-          var msgid = AddUserMsgInDB(chanelId,recvedMsg);
-          ThreadDB.update({"consumer":chanelId},{$push:{msgs:msgid}},function(err, num){});
-        }
-      }
-
-    }
-    function CreateNewThreads(chanelId,recvedMsg){
-      var msgid = AddUserMsgInDB(chanelId,recvedMsg);
-      ProviderDB.find().exec(AddThread);
-        function AddThread(err,items){
-          items.forEach(function(item){
-            var record = new ThreadDB({"consumer": chanelId, "provider": item._id, "msgs":[msgid], "last_seen":"0"});
-            record.save();
-          });
-        }
-    }
-//timeout1 = setInterval(OnTimer1,10*1000);
-
-
-});
-
-function AddUserMsgInDB(ChanelId, msg)
+//REST API functions
+var servermsg = " HERE";
+function respond(req, res, next)
 {
-    var record = new MsgDB();
-    //record.sent = msg.created;
-    record.message = msg.text;
-    record.type = 'text';
-    record.ChanelId = ChanelId;
-    record.sender.name = msg.from.name;
-    record.sender.id = ChanelId;
-    record.sender.type = 'consumer';
-    record.fromUser = true;
-    record.id = msg.id;
-    record.attachments = msg.attachments;
-    record.save();
-    // ProviderDB.find().exec(function(err,items){
-    //   items.forEach(function(item){
-    //     console.log(item._id);
-    //     MsgDB.update({"_id": record._id},{$push:{thread_id:item._id}},{multi: true},function(err, numAffected){});
-    //     //record.thread_id.push("item._id");
-    //   });
-    // });
-
-
-    // ThreadDB.find({"consumer":record.ChanelId}).exec(function(err,items){
-    //   items.forEach(function(item){
-    //     console.log(record._id);
-    //     item.msgs.push(record._id);
-    //   });
-    // });
-    // ThreadDB.update({"consumer":record.ChanelId},{$push:{msgs:record._id}},function(err, num){console.dir(num);});
-    var record1 = JSON.parse(JSON.stringify(record));;
-    record1.sent = record.sent.getTime()/1000|0;
-    wss.clients.forEach(SendWSMsg);
-    function SendWSMsg(client)
-    {
-    	var res = {"command": 'new_message',"data":record1};
-    	client.send(JSON.stringify(res));
-    }
-    return record._id;
-};
-
-var appId = process.env.appId || 'ProivderBot';
-var appSecret = process.env.appSecret || '27da870722c84fa5b7f33bb1e8f3bbd8';
-var credentials = new msRest.BasicAuthenticationCredentials(appId, appSecret);
-
-
-var db = mongoose.connection;
-db.on('error', console.error);
-db.once('open', function() {
-  console.log("connection DB ok");
-});
-
-var SchemaChanel = new mongoose.Schema({
-  from:{name: String,
-  channelId: String,
-  address: String,
-  id: String,
-  isBot: Boolean},
-  to: {name: String,
-  channelId: String,
-  address: String,
-  id: String,
-  isBot: Boolean}
-});
-var SchemaMsg = new mongoose.Schema({
-  ChanelId : {type: String},
-  //thread_id : [String],
-  type: {type: String},
-  message: {type: String},
-  attachments: [],
-  sender : {
-      name:{type: String},
-      id:{type: String},
-      type:{type: String}
-  },
-  sent : {type: Date, default: Date.now},
-  fromUser: {type: Boolean},
-  id: {type: String}
-});
-var SchemaProvider = new mongoose.Schema({
-  name: {type: String},
-  //id: {type: String},
-  username: {type: String},
-  password: {type: String}
-});
-var SchemaAPNS = new mongoose.Schema({
-  token: {type: String}
-});
-var SchemaThread = new mongoose.Schema({
-  consumer: {type: String},
-  provider: {type: String},
-  msgs: [String],
-  last_seen: {type: String}
-});
-
-var MsgDB = mongoose.model('MsgSchema',SchemaMsg);
-var ChanelDB = mongoose.model('ChanelSchema',SchemaChanel);
-var ProviderDB = mongoose.model('ProviderSchema',SchemaProvider);
-var APNSDB = mongoose.model('APNSSchema',SchemaAPNS);
-var ThreadDB = mongoose.model('ThreadSchema',SchemaThread);
-
-function GetThreadLastMsg(threadId)
+	  res.contentType = "text/plain";
+	  res.send(servermsg);
+	  next();
+}
+function handleRequestMessage(req, res, next)
 {
-  var query = MsgDB.find({"ThreadId": threadId}).limit(1).select('created text').sort({"created": -1});
-  return query;
-};
-function GetFrom(threadId)
-{
-  var query = ChanelDB.find().select('from');
-  return query;
-};
+	  res.send('POST API Response!!!');
+	  next();
+}
+// function GetThreadLastMsg(threadId)
+// {
+//   var query = MsgDB.find({"ThreadId": threadId}).limit(1).select('created text').sort({"created": -1});
+//   return query;
+// };
+// function GetFrom(threadId)
+// {
+//   var query = ChanelDB.find().select('from');
+//   return query;
+// };
 
-
-
-///new API function
 function postCreateProvider(req, res, next)
 {
   res.contentType = 'application/json';
@@ -354,7 +184,7 @@ function getThreads(req, res, next)
           continue;
         }
         result[i].consumer = {};
-        result[i].consumer.name = items[0].from.name;
+        result[i].consumer.name = items[0].address.user.name;
         result[i].consumer.id = items[0]._id;
         result[i].consumer.type = 'consumer';
         LCheckConsumers();
@@ -413,8 +243,6 @@ function getThreads(req, res, next)
     }
     function WaitAll()
     {
-      // console.log("CountLastmesage " + CountLastmesage);
-      // console.log("CountConsumer " + CountConsumer);
       if (CountLastmesage == result.length && CountConsumer == result.length)
         finish();
     }
@@ -423,10 +251,7 @@ function getThreads(req, res, next)
 
   function finish()
   {
-    // console.log("result");
-    // console.log(result);
-
-    res.send(result);
+      res.send(result);
   }
 };
 
@@ -507,10 +332,10 @@ function postThreadMsgs(req, res, next)
       }
     });
   }
-  var reply = {};
+  var reply = new builder.Message();
   function LauthOk(){
-     reply.text = req.body.message;
-     reply.attachments = msg.attachments;
+     reply.text(req.body.message);
+     reply.attachments(msg.attachments);
     ThreadDB.find({"_id": req.params.THREAD_ID}).limit(1).exec(function(err,items){
       findChanel(items);
     });
@@ -528,8 +353,7 @@ function postThreadMsgs(req, res, next)
       finish(true);
       return;
     }
-    reply.to = item.from;
-    reply.from = item.to;
+    reply.address(item.address);
     finish(false);
   }
   function finish(err)
@@ -537,7 +361,7 @@ function postThreadMsgs(req, res, next)
     var result = {};
     if (!err)
     {
-      sendMessage1(reply);
+      bot.send(reply);
       msg.save();
       ThreadDB.update({"_id":req.params.THREAD_ID},{$push:{msgs:msg._id}},function(err, num){});
       result.sent = msg.sent.getTime()/1000|0;
@@ -616,22 +440,172 @@ function postThreadMsgSeen(req, res, next)
 
 }
 
-///END new API function
 
-var sendMessage1 = function(msg, cb)
+//bot Functions
+function botDialog(session)
 {
-    var client = new connector(credentials);
-    var options = { customHeaders: {'Ocp-Apim-Subscription-Key': credentials.password}};
-    client.messages.sendMessage(msg, options, function (err, result, request, response) {
-        if (!err && response && response.statusCode >= 400) {
-            err = new Error('Message rejected with "' + response.statusMessage + '"');
-        }
-        if (cb) {
-            cb(err);
-        }
+  session.send();
+//just test APNS
+	var notification = new apns.Notification();
+	notification.alert = "Hello World !";
+	APNSDB.find().exec(function(err, items){
+		items.forEach(function(item){
+			//console.log(item.token);
+			notification.device = new apns.Device(item.token);
+			connection.sendNotification(notification);
+		});
+	});
+
+//end test
+    var recvedMsg = session.message;
+    ServerMsg = 'HERE';
+
+    //new API
+    ChanelDB.findOne({ 'address.user.id': recvedMsg.address.user.id }, function(err, item) {
+      if (err) return console.error(err);
+      if (item == null)
+      {
+        var record = new ChanelDB(recvedMsg);
+        record.save();
+        CheckThreads(record.id,recvedMsg);
+      }
+      else
+      {
+        CheckThreads(item.id,recvedMsg);
+      }
     });
-    //console.dir(msg.to);
+    function CheckThreads(chanelId,recvedMsg)
+    {
+      WelcomeMsgDB.find().limit(1).sort({"added":-1}).exec(function (err,items){
+        if (items.length == 0)
+          return;
+        if (items[0].consumersSended.indexOf(chanelId)==-1)
+        {
+          session.send(items[0].message);
+          items[0].consumersSended[items[0].consumersSended.length]=chanelId;
+          items[0].markModified('consumersSended');
+          items[0].save();
+          // console.log(items[0]);
+          // WelcomeMsgDB.update({"_id":items[0]._id},{$push:{consumersSended:chanelId}},function(err, num){});
+        }
+      });
+      ThreadDB.find({"consumer" : chanelId}).exec(LonFindConsumers);
+      function LonFindConsumers(err,items){
+        if (items.length==0)
+          CreateNewThreads(chanelId,recvedMsg);
+        else
+        {
+          var msgid = AddUserMsgInDB(chanelId,recvedMsg);
+          ThreadDB.update({"consumer":chanelId},{$push:{msgs:msgid}},function(err, num){});
+        }
+      }
+
+    }
+    function CreateNewThreads(chanelId,recvedMsg){
+      var msgid = AddUserMsgInDB(chanelId,recvedMsg);
+      ProviderDB.find().exec(AddThread);
+        function AddThread(err,items){
+          items.forEach(function(item){
+            var record = new ThreadDB({"consumer": chanelId, "provider": item._id, "msgs":[msgid], "last_seen":"0"});
+            record.save();
+          });
+        }
+    }
+
 };
-// Setup Restify Server
-server.post('/api/messages', bot.verifyBotFramework(), bot.listen());
+function AddUserMsgInDB(ChanelId, msg)
+{
+    var record = new MsgDB();
+    record.message = msg.text;
+    record.type = 'text';
+    record.ChanelId = ChanelId;
+    record.sender.name = msg.address.user.name;
+    record.sender.id = ChanelId;
+    record.sender.type = 'consumer';
+    record.fromUser = true;
+    record.id = msg.id;
+    record.attachments = msg.attachments;
+    record.save();
+    var record1 = JSON.parse(JSON.stringify(record));;
+    record1.sent = record.sent.getTime()/1000|0;
+    wss.clients.forEach(SendWSMsg);
+    function SendWSMsg(client)
+    {
+    	var res = {"command": 'new_message',"data":record1};
+    	client.send(JSON.stringify(res));
+    }
+    return record._id;
+};
+
+//mongoose
 mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
+var db = mongoose.connection;
+db.on('error', console.error);
+db.once('open', function()
+{
+  console.log("connection DB ok");
+//   var record = new WelcomeMsgDB();
+//   record.message = "Bundles объединяет шоурумы и дизайнеров одежды, чтобы помочь тебе быстро найти то, что ты хочешь." + "\r\n" +
+// "Сейчас Bundles Bot учится понимать людей с полуслова и проходит закрытое бета-тестирование. Чтобы получить доступ к публичной бете одним из первых, сохрани этот контакт, и Bundles Bot пригласит тебя, как только она будет открыта.";
+//   record.save();
+});
+
+var SchemaChanel = new mongoose.Schema({
+  address:{
+  /*bot:{
+    id: String,
+    isGroup: Boolean,
+    name: String},*/
+  channelId:{type: String},
+  serviceUrl:{type: String},
+  useAuth: {type: Boolean},
+  conversation:{
+    id: String,
+    isGroup: Boolean,
+    name: String},
+  user:{
+    id: String,
+    isGroup: Boolean,
+    name: String}
+  }
+});
+var SchemaMsg = new mongoose.Schema({
+  ChanelId : {type: String},
+  type: {type: String},
+  message: {type: String},
+  attachments: [],
+  sender : {
+      name:{type: String},
+      id:{type: String},
+      type:{type: String}
+  },
+  sent : {type: Date, default: Date.now},
+  fromUser: {type: Boolean},
+  id: {type: String}
+});
+var SchemaProvider = new mongoose.Schema({
+  name: {type: String},
+  username: {type: String},
+  password: {type: String}
+});
+var SchemaAPNS = new mongoose.Schema({
+  token: {type: String}
+});
+var SchemaThread = new mongoose.Schema({
+  consumer: {type: String},
+  provider: {type: String},
+  msgs: [String],
+  last_seen: {type: String}
+});
+var SchemaWelcomeMsg = new mongoose.Schema({
+  message: {type: String},
+  date: {type: Date, default: Date.now},
+  consumersSended: []
+});
+
+var MsgDB = mongoose.model('MsgSchema',SchemaMsg);
+var ChanelDB = mongoose.model('ChanelSchema',SchemaChanel);
+var ProviderDB = mongoose.model('ProviderSchema',SchemaProvider);
+var APNSDB = mongoose.model('APNSSchema',SchemaAPNS);
+var ThreadDB = mongoose.model('ThreadSchema',SchemaThread);
+var WelcomeMsgDB = mongoose.model('WelcomeMsgSchema',SchemaWelcomeMsg);
