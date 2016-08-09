@@ -460,6 +460,7 @@ function botDialog(session)
     var recvedMsg = session.message;
     ServerMsg = 'HERE';
     console.log(session);
+    console.log(session.message.sourceEvent);
     //new API
     ChanelDB.findOne({ 'address.user.id': recvedMsg.address.user.id }, function(err, item) {
       if (err) return console.error(err);
