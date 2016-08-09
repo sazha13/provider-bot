@@ -184,7 +184,7 @@ function getThreads(req, res, next)
           continue;
         }
         result[i].consumer = {};
-        result[i].consumer.name = items[0].address.user.name;
+        result[i].consumer.name = items[0].username;
         result[i].consumer.id = items[0]._id;
         result[i].consumer.type = 'consumer';
         LCheckConsumers();
@@ -467,6 +467,7 @@ function botDialog(session)
       if (item == null)
       {
         var record = new ChanelDB(recvedMsg);
+        record.username = recvedMsg.sourceEvent.message.from.first_name + ' ' + recvedMsg.sourceEvent.message.from.last_name;
         record.save();
         CheckThreads(record.id,recvedMsg);
       }
@@ -520,7 +521,7 @@ function AddUserMsgInDB(ChanelId, msg)
     record.message = msg.text;
     record.type = 'text';
     record.ChanelId = ChanelId;
-    record.sender.name = msg.address.user.name;
+    record.sender.name = msg.sourceEvent.message.from.first_name + ' ' + msg.sourceEvent.message.from.last_name;
     record.sender.id = ChanelId;
     record.sender.type = 'consumer';
     record.fromUser = true;
@@ -568,7 +569,8 @@ var SchemaChanel = new mongoose.Schema({
     id: String,
     isGroup: Boolean,
     name: String}
-  }
+  },
+  username: {type: String}
 });
 var SchemaMsg = new mongoose.Schema({
   ChanelId : {type: String},
