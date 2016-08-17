@@ -356,12 +356,7 @@ function postThreadMsgs(req, res, next) {
   function finish(err) {
     var result = {};
     if (!err) {
-      console.log(reply);
       bot.send(reply,function(err){
-        console.log("err");
-        console.log(err);
-        if (err)
-          console.log(err);
       });
       console.log(msg);
       msg.save();
