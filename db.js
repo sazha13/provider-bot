@@ -1,7 +1,8 @@
 var mongoose = require('mongoose');
 
 // mongoose
-mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
+var mongodb_url = process.env.MONGODB_URL;
+mongoose.connect(mongodb_url);
 var db = mongoose.connection;
 db.on('error', console.error);
 db.once('open', function() {
