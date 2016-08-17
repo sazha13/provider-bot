@@ -1,11 +1,12 @@
 var mongoose = require('mongoose');
 
 // mongoose
-mongoose.connect("mongodb://test:test@ds035485.mlab.com:35485/telegrambot");
+var mongodb_url = process.env.MONGODB_URL;
+mongoose.connect(mongodb_url);
 var db = mongoose.connection;
 db.on('error', console.error);
 db.once('open', function() {
-  console.log("connection DB ok");
+  console.log("Connection DB ok");
   //   var record = new WelcomeMsgDB();
   //   record.message = "Bundles объединяет шоурумы и дизайнеров одежды, чтобы помочь тебе быстро найти то, что ты хочешь." + "\r\n" +
   // "Сейчас Bundles Bot учится понимать людей с полуслова и проходит закрытое бета-тестирование. Чтобы получить доступ к публичной бете одним из первых, сохрани этот контакт, и Bundles Bot пригласит тебя, как только она будет открыта.";
