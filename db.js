@@ -13,10 +13,10 @@ db.once('open', function() {
 });
 var SchemaChanel = new mongoose.Schema({
   address: {
-     bot:{
+    /* bot:{
       id: String,
       isGroup: Boolean,
-      name: String},
+      name: String},*/
     channelId: {
       type: String
     },
