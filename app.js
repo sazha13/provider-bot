@@ -330,9 +330,8 @@ function postThreadMsgs(req, res, next) {
   function LauthOk() {
     reply.text(req.body.message);
     reply.attachments(msg.attachments);
-    db.ThreadDB.find({
-      "_id": req.params.THREAD_ID
-    }).limit(1).exec(function(err, items) {
+    console.log( req.params.THREAD_ID);
+    db.ThreadDB.find({"_id": req.params.THREAD_ID}).limit(1).exec(function(err, items) {
       findChanel(items);
     });
   }
@@ -357,7 +356,9 @@ function postThreadMsgs(req, res, next) {
   function finish(err) {
     var result = {};
     if (!err) {
+      console.log(reply);
       bot.send(reply);
+      console.log(msg);
       msg.save();
       db.ThreadDB.update({
         "_id": req.params.THREAD_ID
