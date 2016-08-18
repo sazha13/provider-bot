@@ -59,6 +59,8 @@ bot.dialog('/',[
     session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь %(choice)s', session.userData.profile);
   }]);
 
+  var choiceSex = ["Джентельмен","Леди"];
+  var choiceClothes = ["Обувь","Одежда"];
   bot.dialog('/ensureProfile', [
       function (session, args, next) {
           session.dialogData.profile = args || {};
@@ -73,25 +75,26 @@ bot.dialog('/',[
               session.dialogData.profile.name = results.response;
           }
           if (!session.dialogData.profile.sex) {
-              builder.Prompts.choice(session, "" + session.dialogData.profile.name + ", ты джентльмен или леди? Не то что бы сомневался, но лучше, если ты подтвердишь мои догадки","Джентельмен|Леди");
+              builder.Prompts.choice(session, "" + session.dialogData.profile.name + ", ты джентльмен или леди? Не то что бы сомневался, но лучше, если ты подтвердишь мои догадки",choiceSex);
           } else {
               next();
           }
       },
       function (session, results, next) {
           if (results.response) {
-            session.dialogData.profile.sex = results.response;
+            console.log(results.response);
+            session.dialogData.profile.sex = results.response.entity;
           }
           if (!session.dialogData.profile.choice) {
-              builder.Prompts.choiсe(session, "Не сочти за нескромность, это исключительно ради работы!\
-                                          Какого размера вещи мне стоит подбирать для тебя?",["Обувь","Одежда"]);
+              builder.Prompts.choice(session, "Не сочти за нескромность, это исключительно ради работы!\
+                                          Какого размера вещи мне стоит подбирать для тебя?",choiceClothes);
           } else {
               next();
           }
       },
       function (session, results) {
           if (results.response) {
-              session.dialogData.profile.choice = results.response;
+              session.dialogData.profile.choice = results.response.entity;
           }
           session.endDialogWithResult({ response: session.dialogData.profile });
       }
