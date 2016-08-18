@@ -1,11 +1,14 @@
+console.log("LOAD restify");
 var restify = require('restify');
+console.log("LOAD builder");
 var builder = require('botbuilder');
-
+console.log("LOAD apns");
 var apns = require("apns");
+console.log("LOAD WebSocketServer");
 var WebSocketServer = require('ws').Server;
-
+console.log("LOAD ./db");
 var db = require("./db");
-
+console.log("HERE");
 // constants data
 
 var port = process.env.PORT || 3011;
@@ -22,7 +25,7 @@ var server = restify.createServer();
 server.listen(port, function() {
   console.log('%s listening to %s', server.name, server.url);
 });
-
+console.log("HERE1");
 // WebSocket
 var wss = new WebSocketServer({
   server
@@ -33,7 +36,7 @@ wss.on('connection', function(ws) {
     console.log("WS CLOSE " + wss.clients.length);
   });
 });
-
+console.log("HERE2");
 // APNS
 var connection = new apns.Connection(options);
 
@@ -45,8 +48,55 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 
 server.post('/api/messages', connector.listen());
+console.log("HERE3");
+// bot.dialog('/', botDialog);
+bot.dialog('/',[
+  function(session){
+    session.beginDialog('/ensureProfile', session.userData.profile);
+  },
+  function(session,results){
+    session.userData.profile = results.response;
+    session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь %(choice)s', session.userData.profile);
+  }]);
 
-bot.dialog('/', botDialog);
+  bot.dialog('/ensureProfile', [
+      function (session, args, next) {
+          session.dialogData.profile = args || {};
+          if (!session.dialogData.profile.name) {
+              builder.Prompts.text(session, "Как я могу к тебе обращаться?");
+          } else {
+              next();
+          }
+      },
+      function (session, results, next) {
+          if (results.response) {
+              session.dialogData.profile.name = results.response;
+          }
+          if (!session.dialogData.profile.sex) {
+              builder.Prompts.choice(session, "" + session.dialogData.profile.name + ", ты джентльмен или леди? Не то что бы сомневался, но лучше, если ты подтвердишь мои догадки","Джентельмен|Леди");
+          } else {
+              next();
+          }
+      },
+      function (session, results, next) {
+          if (results.response) {
+            session.dialogData.profile.sex = results.response;
+          }
+          if (!session.dialogData.profile.choice) {
+              builder.Prompts.choiсe(session, "Не сочти за нескромность, это исключительно ради работы!\
+                                          Какого размера вещи мне стоит подбирать для тебя?",["Обувь","Одежда"]);
+          } else {
+              next();
+          }
+      },
+      function (session, results) {
+          if (results.response) {
+              session.dialogData.profile.choice = results.response;
+          }
+          session.endDialogWithResult({ response: session.dialogData.profile });
+      }
+  ]);
+
 
 // REST API
 server.get('/', respond);

@@ -1,3 +1,4 @@
+console.log("LOAD mongoose");
 var mongoose = require('mongoose');
 
 // mongoose
