@@ -25,7 +25,6 @@ var server = restify.createServer();
 server.listen(port, function() {
   console.log('%s listening to %s', server.name, server.url);
 });
-console.log("HERE1");
 // WebSocket
 var wss = new WebSocketServer({
   server
@@ -36,7 +35,7 @@ wss.on('connection', function(ws) {
     console.log("WS CLOSE " + wss.clients.length);
   });
 });
-console.log("HERE2");
+
 // APNS
 var connection = new apns.Connection(options);
 
@@ -48,16 +47,67 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector);
 
 server.post('/api/messages', connector.listen());
-console.log("HERE3");
 // bot.dialog('/', botDialog);
 bot.dialog('/',[
   function(session){
-    session.beginDialog('/ensureProfile', session.userData.profile);
+    session.beginDialog('/welcome', session.userData);
   },
   function(session,results){
     session.userData.profile = results.response;
     session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь %(choice)s', session.userData.profile);
   }]);
+
+var choiceFirst = ["Как я буду это делать?","Что я могу сейчас?"];
+var choiceSubscribe = ["Конечно, присылай","Лучше поиск скорее включи"];
+bot.dialog('/welcome',[
+  function(session,args,next){
+    session.dialogData.subscribe = args.subscribe || {};
+    if (!session.dialogData.subscribe.firstChoice)
+      builder.Prompts.choice('Привет, я бот, который найдет для тебя любой предмет гардероба. Спроси меня:',choiceFirst);
+    else {
+        next();
+    }
+  },
+  function(session,results,next){
+    if (results.response){
+      session.dialogData.subscribe.firstChoice = results.response.index;
+    }
+    switch (session.dialogData.subscribe.firstChoice) {
+      case 0:
+        session.send("Я - бот-консультант, который сотрудничает со множеством дизайнеров, \
+                      магазинов одежды, обуви и аксессуаров, чтобы помочь тебе быстро найти то, что ты хочешь. \
+                      Пока я только учусь понимать людей с полуслова, \
+                      но всего через пару месяцев стану квалифицированным шоппинг-консультантом и обязательно закачу по этому поводу вечеринку с шампанским [эмоджи с шампанским]\
+                       Так что подписывайся, чтобы первое приглашение пришло именно тебе;)");
+        session.dialogData = {};
+        session.endDialog();
+        break;
+      case 1:
+          session.dialogData.subscribe.firstChoice = 2;
+          buider.Promts.choice("Скоро я начну работать на полную. \
+                                А пока могу раз в неделю присылать тебе информацию о новинках в шоурумах, \
+                                с которыми я сотрудничаю. Хочешь?",choiceSubscribe);
+        break;
+      case 2:
+        next();
+        break;
+      default:
+        session.send("К сожелению, я не понял твоего ответа:-(");
+        session.dialogData = {};
+        session.endDialog();
+    }
+  },
+  function(session,results){
+    if (results.response){
+      session.dialogData.subscribe.profile = results.response.index;
+    }
+    session.beginDialog('/ensureProfile', session.dialogData.profile);
+  },
+  function(session,results){
+    session.dialogData.profile = results.response;
+    session.endDialogWithResult({response: session.dialogData});
+  }
+]);
 
   var choiceSex = ["Джентельмен","Леди"];
   var choiceClothes = ["Обувь","Одежда"];
@@ -82,7 +132,6 @@ bot.dialog('/',[
       },
       function (session, results, next) {
           if (results.response) {
-            console.log(results.response);
             session.dialogData.profile.sex = results.response.entity;
           }
           if (!session.dialogData.profile.choice) {
