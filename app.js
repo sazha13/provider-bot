@@ -50,7 +50,7 @@ server.post('/api/messages', connector.listen());
 // bot.dialog('/', botDialog);
 bot.dialog('/',[
   function(session){
-    session.beginDialog('/welcome', session.userData);
+    session.beginDialog('/ensureProfile', session.userData.profile);
   },
   function(session,results){
     session.userData.profile = results.response;
