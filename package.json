@@ -22,5 +22,10 @@
     "npm": "3.10.3"
   },
   "dependencies": {
+    "apns": "^0.1.0",
+    "botbuilder": "~3.1.1",
+    "mongoose": "~4.5.8",
+    "restify": "~4.1.1",
+    "ws": "^1.1.1"
   }
 }
