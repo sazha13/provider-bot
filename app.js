@@ -60,6 +60,7 @@ bot.dialog('/',[
     // session.dialogData = {};
     console.log(session.userData);
     session.beginDialog('/welcome', session.userData);
+    // session.beginDialog('/size');
   },
   function(session,results){
     console.log(results);
@@ -67,7 +68,7 @@ bot.dialog('/',[
     {
       session.userData = results.response;
       console.log(session.userData);
-      session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь %(choice)s', session.userData.profile);
+      session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s', session.userData.profile);
     }
   }]);
 
@@ -143,6 +144,9 @@ bot.dialog('/welcome',[
 
   var choiceSex = ["Джентельмен","Леди"];
   var choiceClothes = ["Обувь","Одежда"];
+  var choiceClothesSize = ["XXS","XS","S","M","L","XL","XXL"];
+  var choiceShoesSize = ["35","36","37","38","39","40","41","42"];
+
   bot.dialog('/ensureProfile', [
       function (session, args, next) {
         // session.dialogData = {};
@@ -167,17 +171,57 @@ bot.dialog('/welcome',[
           if (results.response) {
             session.dialogData.profile.sex = results.response.entity;
           }
-          if (!session.dialogData.profile.choice) {
-              builder.Prompts.choice(session, "Не сочти за нескромность, это исключительно ради работы!\
-                                          Какого размера вещи мне стоит подбирать для тебя?",choiceClothes);
+          if (!session.dialogData.profile.choiceClothesSmall) {
+              session.send("Не сочти за нескромность, это исключительно ради работы!\
+                            Какого размера вещи мне стоит подбирать для тебя?");
+              builder.Prompts.choice(session, "Начиная с какого размера одежду ты носишь?",choiceClothesSize);
+          } else {
+              next();
+          }
+      },
+      function (session, results, next) {
+          if (results.response) {
+            session.dialogData.profile.choiceClothesSmall = results.response.index;
+            session.dialogData.profile.choiceClothesSmallstr = results.response.entity;
+          }
+          if (!session.dialogData.profile.choiceClothesLarge) {
+            var choiceClothesSizeLarge = choiceClothesSize.slice(session.dialogData.profile.choiceClothesSmall);
+              builder.Prompts.choice(session, "И какой размер одежды уже великоват для тебя?",choiceClothesSizeLarge);
+          } else {
+              next();
+          }
+      },
+      function (session, results, next) {
+          if (results.response) {
+            session.dialogData.profile.choiceClothesLarge = results.response.index+session.dialogData.profile.choiceClothesSmall;
+            session.dialogData.profile.choiceClothesLargestr = choiceClothesSize[session.dialogData.profile.choiceClothesLarge];
+          }
+          if (!session.dialogData.profile.choiceShoesSmall) {
+            session.send("И еще пару вопросов про размер обуви");
+            builder.Prompts.choice(session, "С какого размера обувь носишь?",choiceShoesSize);
+          } else {
+              next();
+          }
+      },
+      function (session, results, next) {
+          if (results.response) {
+            session.dialogData.profile.choiceShoesSmall = results.response.index;
+            session.dialogData.profile.choiceShoesSmallstr = results.response.entity;
+
+          }
+          if (!session.dialogData.profile.choiceShoesLarge) {
+            var choiceShoesSizeLarge = choiceShoesSize.slice(session.dialogData.profile.choiceShoesSmall);
+              builder.Prompts.choice(session, "И какой размер обуви уже великоват для тебя?",choiceShoesSizeLarge);
           } else {
               next();
           }
       },
       function (session, results) {
           if (results.response) {
-              session.dialogData.profile.choice = results.response.entity;
+              session.dialogData.profile.choiceShoesLarge = results.response.index+session.dialogData.profile.choiceShoesSmall;
+              session.dialogData.profile.choiceShoesLargestr = choiceShoesSize[session.dialogData.profile.choiceShoesLarge];
           }
+          console.log(session.dialogData.profile);
           session.endDialogWithResult({ response: session.dialogData.profile });
       }
   ]);
