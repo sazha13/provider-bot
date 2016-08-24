@@ -68,7 +68,7 @@ bot.dialog('/',[
     {
       session.userData = results.response;
       console.log(session.userData);
-      session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s', session.userData.profile);
+      session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceShoesSmallstr)s по %(choiceShoesLargestr)s', session.userData.profile);
     }
   }]);
 
