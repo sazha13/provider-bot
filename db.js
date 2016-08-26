@@ -1,6 +1,6 @@
 console.log('LOAD mongoose');
 var mongoose = require('mongoose');
-var Promise = require('Promise');
+//var Promise = require('Promise');
 
 // mongoose
 var mongodbURL = process.env.MONGODB_URL;
