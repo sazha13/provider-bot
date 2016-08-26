@@ -55,20 +55,34 @@ server.post('/api/messages', connector.listen());
 // bot.dialog('/', botDialog);
 bot.dialog('/',[
   function(session){
+    //session.send("here");
     console.log("RECV msg");
     // session.userData = {};
     // session.dialogData = {};
-    console.log(session.userData);
-    session.beginDialog('/welcome', session.userData);
-    // session.beginDialog('/size');
+    db.GetUserData(session.message.address)
+      .then(function(response){
+        if (response)
+        {
+          session.userData.subscribe = response.subscribe;
+          session.userData.profile = response.profile;
+        }
+        session.beginDialog('/welcome', session.userData);
+      });
   },
   function(session,results){
-    console.log(results);
     if (results.response.profile != null)
     {
       session.userData = results.response;
       console.log(session.userData);
-      session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceShoesSmallstr)s по %(choiceShoesLargestr)s', session.userData.profile);
+      db.UpdateUserData(session.message.address,session.userData)
+        .then(function(response){
+            if (response==1){
+              session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceShoesSmallstr)s по %(choiceShoesLargestr)s', session.userData.profile);
+            }else{
+              botDialog(session);
+            }
+        });
+
     }
   }]);
 
@@ -663,7 +677,7 @@ function botDialog(session) {
   });
 
   function CheckThreads(chanelId, recvedMsg) {
-    db.WelcomeMsgDB.find().limit(1).sort({
+    /*db.WelcomeMsgDB.find().limit(1).sort({
       "added": -1
     }).exec(function(err, items) {
       if (items.length === 0)
@@ -676,7 +690,7 @@ function botDialog(session) {
         console.log(items[0]);
         // WelcomeMsgDB.update({"_id":items[0]._id},{$push:{consumersSended:chanelId}},function(err, num){});
       }
-    });
+    });*/
     db.ThreadDB.find({
       "consumer": chanelId
     }).exec(LonFindConsumers);
