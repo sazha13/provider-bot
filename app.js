@@ -1,14 +1,8 @@
-console.log("LOAD restify");
 var restify = require('restify');
-console.log("LOAD builder");
 var builder = require('botbuilder');
-console.log("LOAD apns");
 var apns = require("apns");
-console.log("LOAD WebSocketServer");
 var WebSocketServer = require('ws').Server;
-console.log("LOAD ./db");
 var db = require("./db");
-console.log("HERE");
 // constants data
 
 var port = process.env.PORT || 3011;
