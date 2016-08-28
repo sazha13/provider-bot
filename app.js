@@ -67,7 +67,6 @@ bot.dialog('/',[
     if (results.response.profile != null)
     {
       session.userData = results.response;
-      console.log(session.userData);
       db.UpdateUserData(session.message.address,session.userData)
         .then(function(response){
             if (response==1){
@@ -229,7 +228,6 @@ bot.dialog('/welcome',[
               session.dialogData.profile.choiceShoesLarge = results.response.index+session.dialogData.profile.choiceShoesSmall;
               session.dialogData.profile.choiceShoesLargestr = choiceShoesSize[session.dialogData.profile.choiceShoesLarge];
           }
-          console.log(session.dialogData.profile);
           session.endDialogWithResult({ response: session.dialogData.profile });
       }
   ]);
@@ -267,7 +265,6 @@ function handleRequestMessage(req, res, next) {
 function postCreateProvider(req, res, next) {
   res.contentType = 'application/json';
   res.charset = 'utf-8';
-  console.dir(req.authorization);
   if (req.authorization === null ||
     req.authorization.basic.username === null ||
     req.authorization.basic.password === null) {
@@ -328,15 +325,12 @@ function getThreads(req, res, next) {
     }
     var itemsProcessed = 0;
     items.forEach(function(item, i, items) {
-      // console.log("forEach " + result.length);
-      // console.log("itemsProcessed "+itemsProcessed);
       result.push({});
       tmpResult.push(item);
       tmpResult[i].last_seen = (item.last_seen === null) ? 0 : item.last_seen;
       result[i].thread_id = item._id;
       // result[i].name = item.from.name;
       if (++itemsProcessed === items.length) {
-        // console.log(tmpResult);
         LWriteOther();
       };
     });
@@ -381,7 +375,6 @@ function getThreads(req, res, next) {
     }
 
     function LonThreadLastMessage(err, item) {
-      // console.log(item);
       for (var i = 0; i < tmpResult.length; i++) {
         if (tmpResult[i].msgs.indexOf(item[0]._id) === -1) {
           continue;
@@ -405,7 +398,6 @@ function getThreads(req, res, next) {
         LCheckLastMsgs();
         return;
       }
-      // console.log(result);
     }
 
     function LCheckLastMsgs() {
@@ -517,7 +509,6 @@ function postThreadMsgs(req, res, next) {
   function LauthOk() {
     reply.text(req.body.message);
     reply.attachments(msg.attachments);
-    console.log( req.params.THREAD_ID);
     db.ThreadDB.find({"_id": req.params.THREAD_ID}).limit(1).exec(function(err, items) {
       findChanel(items);
     });
@@ -545,7 +536,6 @@ function postThreadMsgs(req, res, next) {
     if (!err) {
       bot.send(reply,function(err){
       });
-      console.log(msg);
       msg.save();
       db.ThreadDB.update({
         "_id": req.params.THREAD_ID
@@ -586,7 +576,6 @@ function postAPNs(req, res, next) {
 };
 
 function postThreadMsgSeen(req, res, next) {
-  console.log("thread " + req.params.THREAD_ID + " MSG " + req.params.MSG_ID);
   res.contentType = 'application/json';
   res.charset = 'utf-8';
   LgetAuth();
@@ -639,7 +628,6 @@ function botDialog(session) {
   notification.alert = "Hello World !";
   db.APNSDB.find().exec(function(err, items) {
     items.forEach(function(item) {
-      // console.log(item.token);
       notification.device = new apns.Device(item.token);
       connection.sendNotification(notification);
     });
@@ -647,8 +635,6 @@ function botDialog(session) {
   // end test
   var recvedMsg = session.message;
   ServerMsg = 'HERE';
-  // console.log(session);
-  // console.log(session.message.sourceEvent);
 
   // new API
   db.ChanelDB.findOne({
