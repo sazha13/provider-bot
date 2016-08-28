@@ -149,7 +149,7 @@ function UpdateUserData(address, userData){
       }
 
       if (item !== null) {
-        if (item.userData===null)
+        if (item.userData==null)
         {
           item.userData = {}
         }
