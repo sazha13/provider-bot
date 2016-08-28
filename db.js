@@ -149,6 +149,10 @@ function UpdateUserData(address, userData){
       }
 
       if (item !== null) {
+        if (item.userData===null)
+        {
+          item.userData = {}
+        }
         if (JSON.stringify(item.userData.profile) !== JSON.stringify(userData.profile))
         {
           item.userData = {};//userData;
