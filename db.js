@@ -54,7 +54,9 @@ var SchemaMsg = new mongoose.Schema({
 var SchemaProvider = new mongoose.Schema({
   name: {type: String},
   username: {type: String},
-  password: {type: String}
+  password: {type: String},
+  tags: [],
+  admin: {type: Number, default: 0}
 });
 var SchemaAPNS = new mongoose.Schema({
   token: {type: String}

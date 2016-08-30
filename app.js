@@ -280,6 +280,7 @@ function postCreateProvider(req, res, next) {
       });
       record.username = req.authorization.basic.username;
       record.password = req.authorization.basic.password;
+      record.tags = [];
       record.save();
       res.send(201);
     } else {
