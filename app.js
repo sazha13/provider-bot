@@ -60,6 +60,7 @@ bot.dialog('/',[
           session.userData.subscribe = response.subscribe;
           session.userData.profile = response.profile;
         }
+
         session.beginDialog('/welcome', session.userData);
       });
   },
@@ -84,7 +85,7 @@ var choiceSubscribe = ["Конечно, присылай","Лучше поис
 bot.dialog('/welcome',[
   function(session,args,next){
     // session.dialogData = {};
-    if (args == null)
+    if (args == null || args.subscribe==null)
       args = {};
     console.log(args);
     session.dialogData.subscribe = args.subscribe || {};
@@ -646,7 +647,8 @@ function botDialog(session) {
     if (item === null) {
       var record = new db.ChanelDB(recvedMsg);
       if (recvedMsg.sourceEvent != null) {
-        record.username = recvedMsg.sourceEvent.message.from.first_name + ' ' + recvedMsg.sourceEvent.message.from.last_name;
+        record.username = recvedMsg.sourceEvent.message.from.first_name + ' ' +
+          recvedMsg.sourceEvent.message.from.last_name;
       } else {
         record.username = recvedMsg.address.user.name;
       }
@@ -680,6 +682,7 @@ function botDialog(session) {
       if (items.length === 0)
         CreateNewThreads(chanelId, recvedMsg);
       else {
+
         var msgstr = db.AddUserMsgInDB(chanelId, recvedMsg);
         var msgid = JSON.parse(msgstr)._id;
         SendWSMessage(msgstr);
