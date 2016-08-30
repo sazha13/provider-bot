@@ -129,9 +129,9 @@ function AddUserMsgInDB(ChanelId, msg) {
     }
   });
 }*/
-function GetUserData(address) {
+function GetUserData(msg) {
   return new Promise(function(resolve, reject) {
-    ChanelDB.findOne({'address.user.id': address.user.id}).exec(function(err, item) {
+    ChanelDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
       if (err) {
         return reject(err);
       }
@@ -169,10 +169,29 @@ function UpdateUserData(address, userData){
     });
   });
 }
+
+function AddChanel(msg){
+  return new Promise(function(resolve,reject){
+    ChanelDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
+      if (err) return reject(err);
+      if (item != null) return resolve(item._id);
+      var record = new ChanelDB(msg);
+      if (msg.sourceEvent != null) {
+        record.username = msg.sourceEvent.message.from.first_name + ' ' +
+          msg.sourceEvent.message.from.last_name;
+      } else {
+        record.username = msg.address.user.name;
+      }
+      record.save();
+      return resolve(record._id);
+    });
+  });
+}
 // exports.AddUserInDB = AddUserInDB;
 exports.AddUserMsgInDB = AddUserMsgInDB;
 exports.GetUserData = GetUserData;
 exports.UpdateUserData = UpdateUserData;
+exports.AddChanel = AddChanel;
 
 /*function CheckThreads(chanelId, recvedMsg) {
   ThreadDB.find({

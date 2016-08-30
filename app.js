@@ -49,20 +49,22 @@ server.post('/api/messages', connector.listen());
 // bot.dialog('/', botDialog);
 bot.dialog('/',[
   function(session){
-    //session.send("here");
-    console.log("RECV msg");
     // session.userData = {};
     // session.dialogData = {};
-    db.GetUserData(session.message.address)
+    db.AddChanel(session.message)
       .then(function(response){
-        if (response)
-        {
-          session.userData.subscribe = response.subscribe;
-          session.userData.profile = response.profile;
-        }
+        db.GetUserData(session.message)
+          .then(function(response){
+            if (response)
+            {
+              session.userData.subscribe = response.subscribe;
+              session.userData.profile = response.profile;
+            }
 
-        session.beginDialog('/welcome', session.userData);
+            session.beginDialog('/welcome', session.userData);
+          });
       });
+
   },
   function(session,results){
     if (results.response.profile != null)
@@ -85,7 +87,7 @@ var choiceSubscribe = ["Конечно, присылай","Лучше поис
 bot.dialog('/welcome',[
   function(session,args,next){
     // session.dialogData = {};
-    if (args == null || args.subscribe==null)
+    if (args == null)
       args = {};
     console.log(args);
     session.dialogData.subscribe = args.subscribe || {};
