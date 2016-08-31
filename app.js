@@ -743,6 +743,7 @@ bot.dialog('/LUISintent',intents);
 
 intents.matches('помощь',
   function(session, args, next){
+    console.log(session.message.text);
     session.send("Покупатель попросил помощи");
 });
 
@@ -752,7 +753,7 @@ intents.matches('хочу',
     function (session, args, next) {
       var promise = new Promise(function(resolve,reject){
       console.log("HERE хочу");
-      console.log(args);
+      console.log(session.message.text);
       if (args.entities.length == 0) next();
         // Process optional entities received from LUIS
         var match;
@@ -808,4 +809,7 @@ intents.matches('хочу',
 //     console.log("onBegin");
 //     next();
 // });
-intents.onDefault(function(session){session.send("Не смог понять чего хотят");});
+intents.onDefault(function(session){
+  console.log(session.message.text);
+  session.send("Не смог понять чего хотят");
+});
