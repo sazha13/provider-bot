@@ -776,8 +776,6 @@ intents.matches('хочу',[
                   for (var j = 0; j<entities.length; j++)
                   {
                     match = builder.EntityRecognizer.findAllMatches(response[i].tags, entities[j].entity);
-                    console.log("matches ");
-                    console.log(match);
                     if (match.length) {
                       mustSend = true;
                       msgToSend += match[0].entity + ", "
@@ -790,8 +788,6 @@ intents.matches('хочу',[
               }
               if (providers.length == 0)
                 msgToSend += "Cообщение будет отправлено админу"
-              console.log("must send providers");
-              console.log(providers);
               return resolve(msgToSend);
             });
 
