@@ -741,6 +741,13 @@ function botDialog(session) {
 
 bot.dialog('/LUISintent',intents);
 
+intents.matches('помощь',
+  function(session, args, next){
+    session.send("Покупатель попросил помощи");
+});
+
+
+
 intents.matches('хочу',
     function (session, args, next) {
       var promise = new Promise(function(resolve,reject){
@@ -801,4 +808,4 @@ intents.matches('хочу',
 //     console.log("onBegin");
 //     next();
 // });
-intents.onDefault(function(session){console.log("onDefault");});
+intents.onDefault(function(session){session.send("Не смог понять чего хотят");});
