@@ -8,6 +8,7 @@ var db = require("./db");
 var port = process.env.PORT || 3011;
 var msAppId = process.env.MICROSOFT_APP_ID;
 var msAppPassword = process.env.MICROSOFT_APP_PASSWORD;
+var LUISurl = process.env.LUIS_URL;
 
 var options = {
   keyFile: "cert/213.key.pem",
@@ -39,6 +40,8 @@ var connector = new builder.ChatConnector({
   appPassword: msAppPassword
 });
 var bot = new builder.UniversalBot(connector);
+var recognizer = new builder.LuisRecognizer(LUISurl);
+var intents = new builder.IntentDialog({ recognizers: [recognizer] });
 
 server.post('/api/messages', connector.listen());
 
@@ -46,7 +49,7 @@ server.post('/api/messages', connector.listen());
 // bot.dialog('/',function(session){
 //
 // });
-// bot.dialog('/', botDialog);
+// bot.dialog('/', intents);
 bot.dialog('/',[
   function(session){
     // session.userData = {};
@@ -626,6 +629,7 @@ function postThreadMsgSeen(req, res, next) {
 
 // bot Functions
 function botDialog(session) {
+  session.beginDialog('/LUISintent');
   session.send();
   // just test APNS
   var notification = new apns.Notification();
@@ -734,3 +738,65 @@ function botDialog(session) {
     }
   }
 }
+
+bot.dialog('/LUISintent',intents);
+
+intents.matches('хочу',
+    function (session, args, next) {
+      var promise = new Promise(function(resolve,reject){
+      console.log("HERE хочу");
+      console.log(args);
+      if (args.entities.length == 0) next();
+        // Process optional entities received from LUIS
+        var match;
+        var entities = builder.EntityRecognizer.findAllEntities(args.entities, 'предмет');
+        console.log("find entities");
+        console.log(entities);
+        var msgToSend = "Обнаружены желания купить: ";
+        for (var i = 0; i<entities.length; i++)
+          msgToSend += entities[i].entity + ", ";
+        msgToSend += "Сообщение будет разослано (теги, продавец): \n\n";
+
+        if (entities.length) {
+          db.GetAllProviders()
+            .then(function(response){
+              var providers = [];
+              for (var i = 0; i<response.length; i++)
+              {
+                  // match = builder.EntityRecognizer.findBestMatch(response[i].tags, entity.entity);
+                  var mustSend = false;
+                  for (var j = 0; j<entities.length; j++)
+                  {
+                    match = builder.EntityRecognizer.findAllMatches(response[i].tags, entities[j].entity);
+                    console.log("matches ");
+                    console.log(match);
+                    if (match.length) {
+                      mustSend = true;
+                      msgToSend += match[0].entity + ", "
+                    }
+                  }
+                  if (mustSend) {
+                    providers[providers.length] = response[i];
+                    msgToSend+= "Продавец: "+ response[i].name + " \n\n";
+                  }
+              }
+              console.log("must send providers");
+              console.log(providers);
+              return resolve(msgToSend);
+            });
+
+        }
+      })
+      .then(function(response){
+        console.log("then HERE");
+        console.log(response);
+        // console.log(session);
+        session.send(response);
+      });
+
+});
+// intents.onBegin(function (session, args, next) {
+//     console.log("onBegin");
+//     next();
+// });
+intents.onDefault(function(session){console.log("onDefault");});

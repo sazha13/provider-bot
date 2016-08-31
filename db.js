@@ -107,28 +107,7 @@ function AddUserMsgInDB(ChanelId, msg) {
   record.save();
   return JSON.stringify(record);
 }
-/*function AddUserInDB(msg) {
-  ChanelDB.findOne({
-    'address.user.id': msg.address.user.id
-  }, function(err, item) {
-    if (err) {
-      return console.error(err);
-    }
-    if (item === null) {
-      var record = new ChanelDB(msg);
-      if (msg.sourceEvent != null) {
-        record.username = msg.sourceEvent.message.from.first_name + ' ' +
-                          msg.sourceEvent.message.from.last_name;
-      } else {
-        record.username = msg.address.user.name;
-      }
-      record.save();
-      CheckThreads(record.id, msg);
-    } else {
-      CheckThreads(item.id, msg);
-    }
-  });
-}*/
+
 function GetUserData(msg) {
   return new Promise(function(resolve, reject) {
     ChanelDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
@@ -187,51 +166,18 @@ function AddChanel(msg){
     });
   });
 }
-// exports.AddUserInDB = AddUserInDB;
+function GetAllProviders(){
+  return new Promise(function(resolve,reject){
+    ProviderDB.find().exec(function(err, items) {
+      if (err) return reject(err);
+      return resolve(items.length?items:[]);
+    });
+  });
+}
+
+
 exports.AddUserMsgInDB = AddUserMsgInDB;
 exports.GetUserData = GetUserData;
 exports.UpdateUserData = UpdateUserData;
 exports.AddChanel = AddChanel;
-
-/*function CheckThreads(chanelId, recvedMsg) {
-  ThreadDB.find({
-    'consumer': chanelId
-  }).exec(LonFindConsumers);
-
-  function LonFindConsumers(err, items) {
-    if (items.length === 0) {
-      CreateNewThreads(chanelId, recvedMsg);
-    } else {
-      var msgstr = AddUserMsgInDB(chanelId, recvedMsg);
-      var msgid = JSON.parse(msgstr)._id;
-      SendWSMessage(msgstr);
-      ThreadDB.update({
-        'consumer': chanelId
-      }, {
-        $push: {
-          msgs: msgid
-        }
-      }, function(err, num) {});
-    }
-  }
-
-}
-
-function CreateNewThreads(chanelId, recvedMsg) {
-  var msgstr = AddUserMsgInDB(chanelId, recvedMsg);
-  var msgid = JSON.parse(msgstr)._id;
-  SendWSMessage(msgstr);
-  ProviderDB.find().exec(AddThread);
-
-  function AddThread(err, items) {
-    items.forEach(function(item) {
-      var record = new ThreadDB({
-        'consumer': chanelId,
-        'provider': item._id,
-        'msgs': [msgid],
-        'last_seen': '0'
-      });
-      record.save();
-    });
-  }
-}*/
+exports.GetAllProviders = GetAllProviders;
