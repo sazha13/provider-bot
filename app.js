@@ -780,6 +780,8 @@ intents.matches('хочу',
                     msgToSend+= "Продавец: "+ response[i].name + " \n\n";
                   }
               }
+              if (providers.length == 0)
+                msgToSend += "Cообщение будет отправлено админу"
               console.log("must send providers");
               console.log(providers);
               return resolve(msgToSend);
