@@ -749,7 +749,7 @@ intents.matches('помощь',
 
 
 
-intents.matches('хочу',
+intents.matches('хочу',[
     function (session, args, next) {
       var promise = new Promise(function(resolve,reject){
       console.log("HERE хочу");
@@ -804,7 +804,10 @@ intents.matches('хочу',
         session.send(response);
       });
 
-});
+},
+function(session,args){
+  session.send("Понял что есть желание, но не понял чего именно хотите");
+}]);
 // intents.onBegin(function (session, args, next) {
 //     console.log("onBegin");
 //     next();
