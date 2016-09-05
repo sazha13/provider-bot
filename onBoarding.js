@@ -21,12 +21,15 @@ function(session,args,next){
   if (!session.dialogData.subscribe.firstChoice)
   {
     builder.Prompts.choice(session,'Привет, я бот, который найдет для тебя любой предмет гардероба. Спроси меня:',choiceFirst);
+    console.log("HERE1");
   }
   else {
+    console.log("HERE1");
     next();
   }
 },
 function(session,results,next){
+  console.log("HERE");
   if (results.response){
     session.dialogData.subscribe.firstChoice = results.response.index;
   }
