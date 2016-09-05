@@ -73,7 +73,7 @@ msg.sourceEvent({
     telegram: {
         method: "sendMessage",
         parameters: {
-            text: "",
+            text: "bla",
             parse_mode: "Markdown",
             reply_markup: JSON.stringify({
                 "keyboard": [
