@@ -30,6 +30,7 @@ function(session,results,next){
   if (results.response){
     session.dialogData.subscribe.firstChoice = results.response.index;
   }
+  console.log(session.dialogData.subscribe.firstChoice);
   switch (session.dialogData.subscribe.firstChoice) {
     case 0:
       session.send("Я - бот-консультант, который сотрудничает со множеством дизайнеров, \
