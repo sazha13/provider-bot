@@ -56,19 +56,7 @@ bot.dialog('/',[
     // session.dialogData = {};
     console.log("HERE DIALOG ");
     var msg = new builder.Message(session);
-    // msg.sourceEvent({
-    //     telegram: {
-    //         method: "sendMessage",
-    //         parameters: {
-    //             // text: "This is a reply keyboard",
-    //             // parse_mode: "Markdown",
-    //             reply_markup: JSON.stringify({
-    //                 "hide_keyboard": true
-    //             })
-    //         }
-    //     }
-    // });
-    // session.send(msg);
+
 msg.sourceEvent({
     telegram: {
         method: "sendMessage",
@@ -77,9 +65,9 @@ msg.sourceEvent({
             parse_mode: "Markdown",
             reply_markup: JSON.stringify({
                 "keyboard": [
-                    [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
-                    [{ text: "сапоги" }],
-                    [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
+                    // [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
+                    // [{ text: "сапоги" }],
+                    // [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
                 ],
                  "one_time_keyboard" : true
             })
