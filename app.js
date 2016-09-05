@@ -41,7 +41,7 @@ var connector = new builder.ChatConnector({
 });
 var bot = new builder.UniversalBot(connector);
 var recognizer = new builder.LuisRecognizer(LUISurl);
-var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+var intents = new builder.IntentDialog({ recognizeMode: builder.RecognizeMode.onBegin, recognizers: [recognizer] });
 
 server.post('/api/messages', connector.listen());
 
@@ -54,6 +54,26 @@ bot.dialog('/',[
   function(session){
     // session.userData = {};
     // session.dialogData = {};
+    console.log("HERE DIALOG ");
+    var msg = new builder.Message(session);
+msg.sourceEvent({
+    telegram: {
+        method: "sendMessage",
+        parameters: {
+            text: "This is a reply keyboard",
+            parse_mode: "Markdown",
+            reply_markup: JSON.stringify({
+                "keyboard": [
+                    [{ text: "1" }, { text: "2" }, { text: "3" }],
+                    [{ text: "4" }, { text: "5" }, { text: "6" }],
+                    [{ text: "7" }, { text: "8" }, { text: "9" }],
+                    [{ text: "*" }, { text: "0" }, { text: "#" }]
+                ]
+            })
+        }
+    }
+});
+session.send(msg);
     db.AddChanel(session.message)
       .then(function(response){
         db.GetUserData(session.message)
@@ -75,6 +95,7 @@ bot.dialog('/',[
       session.userData = results.response;
       db.UpdateUserData(session.message.address,session.userData)
         .then(function(response){
+          console.log("HERE UpdateUserData then");
             if (response==1){
               session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceShoesSmallstr)s по %(choiceShoesLargestr)s', session.userData.profile);
             }else{
@@ -629,6 +650,8 @@ function postThreadMsgSeen(req, res, next) {
 
 // bot Functions
 function botDialog(session) {
+  console.log("botDialog");
+  // console.log(session);
   session.beginDialog('/LUISintent');
   session.send();
   // just test APNS
@@ -743,14 +766,17 @@ bot.dialog('/LUISintent',intents);
 
 intents.matches('помощь',
   function(session, args, next){
+    console.log("HERE HELP");
     console.log(session.message.text);
     session.send("Покупатель попросил помощи");
+    session.endDialog();
 });
 
 
 
 intents.matches('хочу',[
     function (session, args, next) {
+      console.log("HERE WHANT");
       var promise = new Promise(function(resolve,reject){
       console.log("HERE хочу");
       console.log(session.message.text);
@@ -794,21 +820,24 @@ intents.matches('хочу',[
         }
       })
       .then(function(response){
-        console.log("then HERE");
         console.log(response);
         // console.log(session);
         session.send(response);
+        session.endDialog();
       });
 
 },
 function(session,args){
   session.send("Понял что есть желание, но не понял чего именно хотите");
+  session.endDialog();
 }]);
-// intents.onBegin(function (session, args, next) {
-//     console.log("onBegin");
-//     next();
-// });
+intents.onBegin(function (session, args, next) {
+    console.log("onBegin");
+    next();
+});
 intents.onDefault(function(session){
+  console.log("HERE INTENTS onDefault");
   console.log(session.message.text);
   session.send("Не смог понять чего хотят");
+  session.endDialog();
 });
