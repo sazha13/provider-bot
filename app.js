@@ -68,7 +68,8 @@ msg.sourceEvent({
                     [{ text: "4" }, { text: "5" }, { text: "6" }],
                     [{ text: "7" }, { text: "8" }, { text: "9" }],
                     [{ text: "*" }, { text: "0" }, { text: "#" }]
-                ]
+                ],
+                "one_time_keyboard" : true
             })
         }
     }
