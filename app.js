@@ -55,26 +55,26 @@ bot.dialog('/',[
     // session.userData = {};
     // session.dialogData = {};
     console.log("HERE DIALOG ");
-    var msg = new builder.Message(session);
-
-msg.sourceEvent({
-    telegram: {
-        method: "sendMessage",
-        parameters: {
-            text: "bla1",
-            parse_mode: "Markdown",
-            reply_markup: JSON.stringify({
-                "keyboard": [
-                    // [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
-                    // [{ text: "сапоги" }],
-                    // [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
-                 ],
-                //  "one_time_keyboard" : true
-            })
-        }
-    }
-});
-session.send(msg);
+//     var msg = new builder.Message(session);
+//
+// msg.sourceEvent({
+//     telegram: {
+//         method: "sendMessage",
+//         parameters: {
+//             text: "bla1",
+//             parse_mode: "Markdown",
+//             reply_markup: JSON.stringify({
+//                 "keyboard": [
+//                     // [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
+//                     // [{ text: "сапоги" }],
+//                     // [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
+//                  ],
+//                 //  "one_time_keyboard" : true
+//             })
+//         }
+//     }
+// });
+// session.send(msg);
     db.AddChanel(session.message)
       .then(function(response){
         db.GetUserData(session.message)
