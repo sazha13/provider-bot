@@ -77,6 +77,9 @@ msg.sourceEvent({
             parse_mode: "Markdown",
             reply_markup: JSON.stringify({
                 "keyboard": [
+                    [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
+                    [{ text: "ерунда" }],
+                    [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
                 ],
                 "one_time_keyboard" : true
             })
