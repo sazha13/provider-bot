@@ -60,7 +60,7 @@ msg.sourceEvent({
     telegram: {
         method: "sendMessage",
         parameters: {
-            text: "This is a reply keyboard",
+            // text: "This is a reply keyboard",
             parse_mode: "Markdown",
             reply_markup: JSON.stringify({
                 "keyboard": [
