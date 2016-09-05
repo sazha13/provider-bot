@@ -20,8 +20,8 @@ function(session,args,next){
   session.dialogData.profile = args.profile || {};
   if (!session.dialogData.subscribe.firstChoice)
   {
+    console.log("HERE2" + session.dialogData.subscribe.firstChoice);
     builder.Prompts.choice(session,'Привет, я бот, который найдет для тебя любой предмет гардероба. Спроси меня:',choiceFirst);
-    console.log("HERE1");
   }
   else {
     console.log("HERE1");
@@ -33,6 +33,7 @@ function(session,results,next){
   if (results.response){
     session.dialogData.subscribe.firstChoice = results.response.index;
   }
+  console.log("session.dialogData.subscribe.firstChoice");
   console.log(session.dialogData.subscribe.firstChoice);
   switch (session.dialogData.subscribe.firstChoice) {
     case 0:
@@ -42,6 +43,7 @@ function(session,results,next){
                     но всего через пару месяцев стану квалифицированным шоппинг-консультантом и обязательно закачу по этому поводу вечеринку с шампанским [эмоджи с шампанским]\
                      Так что подписывайся, чтобы первое приглашение пришло именно тебе;)");
       session.dialogData = {};
+      console.log("LOG HERE");
       session.endDialog();
       break;
     case 1:
