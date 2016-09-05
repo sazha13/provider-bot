@@ -69,25 +69,25 @@ bot.dialog('/',[
         }
     });
     session.send(msg);
-msg.sourceEvent({
-    telegram: {
-        method: "sendMessage",
-        parameters: {
-            // text: "This is a reply keyboard",
-            parse_mode: "Markdown",
-            reply_markup: JSON.stringify({
-                "keyboard": [
-                    [{ text: "_1_" }, { text: "2" }, { text: "3" }],
-                    [{ text: "*4*",parse_mode: "Markdown" }, { text: "5" }, { text: "6" }],
-                    [{ text: "7" }, { text: "8" }, { text: "9" }],
-                    [{ text: "*" }, { text: "0" }, { text: "#" }]
-                ],
-                "one_time_keyboard" : true
-            })
-        }
-    }
-});
-session.send(msg);
+// msg.sourceEvent({
+//     telegram: {
+//         method: "sendMessage",
+//         parameters: {
+//             // text: "This is a reply keyboard",
+//             parse_mode: "Markdown",
+//             reply_markup: JSON.stringify({
+//                 "keyboard": [
+//                     [{ text: "_1_" }, { text: "2" }, { text: "3" }],
+//                     [{ text: "*4*" }, { text: "5" }, { text: "6" }],
+//                     [{ text: "7" }, { text: "8" }, { text: "9" }],
+//                     [{ text: "*" }, { text: "0" }, { text: "#" }]
+//                 ],
+//                 "one_time_keyboard" : true
+//             })
+//         }
+//     }
+// });
+// // session.send(msg);
     db.AddChanel(session.message)
       .then(function(response){
         db.GetUserData(session.message)
