@@ -55,6 +55,22 @@ bot.dialog('/',[
     // session.userData = {};
     // session.dialogData = {};
     console.log("HERE DIALOG ");
+    if (session.message.text == "/reset")
+    {
+      session.userData = {};
+      session.dialogData = {};
+      db.UpdateUserData(session.message.address,session.userData)
+      .then(function(response){
+        console.log("HERE UserData RESET");
+          if (response==1){
+            session.send('Данные удалены');
+          }else{
+            botDialog(session);
+          }
+          session.endDialog();
+      });
+
+    }
 //     var msg = new builder.Message(session);
 //
 // msg.sourceEvent({
