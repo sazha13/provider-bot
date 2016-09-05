@@ -61,15 +61,15 @@ msg.sourceEvent({
     telegram: {
         method: "sendMessage",
         parameters: {
-            text: "bla",
+            text: "bla1",
             parse_mode: "Markdown",
             reply_markup: JSON.stringify({
                 "keyboard": [
                     // [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
                     // [{ text: "сапоги" }],
                     // [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
-                ],
-                 "one_time_keyboard" : true
+                 ],
+                //  "one_time_keyboard" : true
             })
         }
     }
