@@ -73,15 +73,15 @@ msg.sourceEvent({
     telegram: {
         method: "sendMessage",
         parameters: {
-            text: "This is a reply keyboard",
+            text: "",
             parse_mode: "Markdown",
             reply_markup: JSON.stringify({
                 "keyboard": [
                     [{ text: "штаны" }, { text: "джинсы" }, { text: "босоножки" }],
-                    [{ text: "ерунда" }],
+                    [{ text: "сапоги" }],
                     [{ text: "help" }, { text: "поболтать" }, { text: "лайк" }]
-                ]//,
-                // "one_time_keyboard" : true
+                ],
+                 "one_time_keyboard" : true
             })
         }
     }
