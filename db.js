@@ -175,9 +175,31 @@ function GetAllProviders(){
   });
 }
 
+function CreateNewThreads(session){
+  return new Promise(function(resolve,reject){
+    AddChanel(session.message)
+    .then(function(customer){
+      GetAllProviders()
+      .then(function(providers){
+        for (var i = 0; i < providers.length; i++){
+          ThreadDB.findOne({'customer': customer, 'provider': providers[i]})
+          .exec(function(err,item){
+            if (err) return reject(err);
+            if (item) return;
+            var record = new ThreadDB({'customer': customer, 'provider': providers[i]});
+            record.save();
+          });
+        };
+        return resolve(true);
+      })
+    })
+  });
+}
+
 
 exports.AddUserMsgInDB = AddUserMsgInDB;
 exports.GetUserData = GetUserData;
 exports.UpdateUserData = UpdateUserData;
 exports.AddChanel = AddChanel;
 exports.GetAllProviders = GetAllProviders;
+exports.CreateNewThreads = CreateNewThreads;

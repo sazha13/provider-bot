@@ -1,5 +1,5 @@
 var builder = require('botbuilder');
-var db = require("./db");
+var db = require('./db');
 // var app = require("./app.js");
 
 var choiceFirst = ["Как я буду это делать?","Что я могу сейчас?"];
@@ -15,26 +15,20 @@ function(session,args,next){
   // session.dialogData = {};
   if (args == null)
     args = {};
-  console.log(args);
   session.dialogData.subscribe = args.subscribe || {};
   session.dialogData.profile = args.profile || {};
   if (!session.dialogData.subscribe.firstChoice)
   {
-    console.log("HERE2" + session.dialogData.subscribe.firstChoice);
     builder.Prompts.choice(session,'Привет, я бот, который найдет для тебя любой предмет гардероба. Спроси меня:',choiceFirst);
   }
   else {
-    console.log("HERE1");
     next();
   }
 },
 function(session,results,next){
-  console.log("HERE");
   if (results.response){
     session.dialogData.subscribe.firstChoice = results.response.index;
   }
-  console.log("session.dialogData.subscribe.firstChoice");
-  console.log(session.dialogData.subscribe.firstChoice);
   switch (session.dialogData.subscribe.firstChoice) {
     case 0:
       session.send("Я - бот-консультант, который сотрудничает со множеством дизайнеров, \
@@ -160,10 +154,25 @@ var ensureProfileFunctions = [
         session.endDialogWithResult({ response: session.dialogData.profile });
     }
 ];
-function registerDialogs(bot)
-{
-  bot.dialog('/welcome',welcomeDialogFunctions);
 
+function resetAllData(session){
+  return new Promise(function(resolve,reject){
+    session.userData = {};
+    session.dialogData = {};
+    db.UpdateUserData(session.message.address,session.userData)
+    .then(function(response){
+      if (response==1){
+        return resolve(true);
+      }else{
+        return resolve(false);
+      }
+    });
+  });
+}
+
+function registerDialogs(bot){
+  bot.dialog('/welcome',welcomeDialogFunctions);
   bot.dialog('/ensureProfile', ensureProfileFunctions);
 }
 exports.registerDialogs = registerDialogs;
+exports.resetAllData = resetAllData;
