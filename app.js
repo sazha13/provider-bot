@@ -1,7 +1,8 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var webSock = require('./webSock');
 
-var WebSocketServer = require('ws').Server;
+
 var db = require('./db');
 var botFunc = require('./botFunc');
 // constants data
@@ -14,15 +15,7 @@ server.listen(port, function() {
   console.log('%s listening to %s', server.name, server.url);
 });
 // WebSocket
-var wss = new WebSocketServer({
-  server
-});
-wss.on('connection', function(ws) {
-  console.log("WS connection add " + wss.clients.length);
-  ws.on('close', function(code, message) {
-    console.log("WS CLOSE " + wss.clients.length);
-  });
-});
+webSock.addServer(server);
 
 
 
