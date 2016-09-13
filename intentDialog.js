@@ -10,36 +10,78 @@ function registerDialogs(bot){
   bot.dialog('/LUISintent',intents);
 }
 
-intents.matches('помощь',helpDialog);
-intents.matches('хочу',whantDialog);
-intents.onBegin(onBegin);
-intents.onDefault(onDefault);
+
 
 var helpDialog = function (session, args, next){
   console.log(session.message.text);
   session.send("Покупатель попросил помощи");
-  session.endDialog();
-}
+  session.endDialogWithResult({type:'помощь',tags:[],shops:[]});
+};
 
 var whantDialog = [
     function (session, args, next) {
-      console.log("HERE WHANT");
       var promise = new Promise(function(resolve,reject){
-      console.log("HERE хочу");
-      console.log(session.message.text);
       if (args.entities.length == 0) next();
         // Process optional entities received from LUIS
         var match;
         var entities = builder.EntityRecognizer.findAllEntities(args.entities, 'предмет');
-        console.log("find entities");
-        console.log(entities);
         var msgToSend = "Обнаружены желания купить: ";
         for (var i = 0; i<entities.length; i++)
           msgToSend += entities[i].entity + ", ";
         msgToSend += "Сообщение будет разослано (теги, продавец): \n\n";
 
         if (entities.length) {
-          db.GetAllProviders()
+          db.GetTags()
+          .then(function(response){
+
+            var shops = [];
+            var shopsName = [];
+            var tags = [];
+            var tagsFinded = [];
+            for (var i = 0; i<response.length; i++) {
+              tags.push(response[i].tag);
+            }
+
+            for (var j = 0; j<entities.length; j++) {
+              tagsFinded.push(entities[j].entity);
+              match = builder.EntityRecognizer.findAllMatches(tags, entities[j].entity);
+              for (var i = 0; i<match.length; i++){
+                var index = tags.indexOf(match[0].entity);
+                for (var k = 0; index!=-1 && k < response[index].shopsId.length; k++){
+                  if (shops.indexOf(response[index].shopsId[k])==-1){
+                    shops.push(response[index].shopsId[k]);
+                  }
+                }
+
+              }
+              if (match.length) {
+                mustSend = true;
+                msgToSend += match[0].entity + ", "
+              }
+            }
+            msgToSend += "\n\nПродавцы: ";
+            var promise1 = new Promise(function(resolve,reject){
+              var step = 0;
+              for (var i = 0; i<shops.length; i++){
+                db.GetShopById(shops[i])
+                .then(function(shopName){
+                  shopsName.push(shopName);
+                  msgToSend += shopName + ', ';
+                  step++;
+                  if (step == shops.length)
+                    return resolve();
+                });
+              }
+            });
+
+            if (!shops.length)
+              msgToSend += "Cообщение будет отправлено админу";
+            promise1.then(function(){
+              return resolve({testmsg: msgToSend, AI:{type:'желание',tags:tagsFinded,shops:shopsName}});
+            });
+
+          });
+          /*db.GetAllProviders()
             .then(function(response){
               var providers = [];
               for (var i = 0; i<response.length; i++)
@@ -62,21 +104,20 @@ var whantDialog = [
               if (providers.length == 0)
                 msgToSend += "Cообщение будет отправлено админу"
               return resolve(msgToSend);
-            });
+            });*/
 
         }
       })
       .then(function(response){
-        console.log(response);
         // console.log(session);
-        session.send(response);
-        session.endDialog();
+        session.send(response.testmsg);
+        session.endDialogWithResult(response.AI);
       });
 
 },
 function(session,args){
   session.send("Понял что есть желание, но не понял чего именно хотите");
-  session.endDialog();
+  session.endDialogWithResult({type:'желание',tags:[],shops:[]});
 }];
 
 var onBegin = function (session, args, next) {
@@ -88,7 +129,10 @@ var onDefault = function(session){
   console.log("HERE INTENTS onDefault");
   console.log(session.message.text);
   session.send("Не смог понять чего хотят");
-  session.endDialog();
+  session.endDialogWithResult({type:'None',tags:[],shops:[]});
 };
-
+intents.matches('помощь',helpDialog);
+intents.matches('хочу',whantDialog);
+intents.onBegin(onBegin);
+intents.onDefault(onDefault);
 exports.registerDialogs = registerDialogs;

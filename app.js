@@ -1,6 +1,7 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var webSock = require('./webSock');
+var httpServ = require('./httpServ');
 
 
 var db = require('./db');
@@ -17,44 +18,29 @@ server.listen(port, function() {
 // WebSocket
 webSock.addServer(server);
 
-
-
 server.post('/api/messages', botFunc.connector.listen());
 
-
-
-
-
-
 // REST API
-server.get('/', respond);
-server.post('/request', handleRequestMessage);
+server.get('/', httpServ.respond);
+server.post('/request', httpServ.handleRequestMessage);
 
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.bodyParser());
 server.use(restify.authorizationParser());
 
-server.get('/thread', getThreads);
-server.get('/thread/:THREAD_ID/messages', getThreadMsgs);
-server.post('/thread/:THREAD_ID/messages', postThreadMsgs);
-server.post('/apns', postAPNs);
-server.post('/createProvider', postCreateProvider);
-server.post('/thread/:THREAD_ID/message_seen/:MSG_ID', postThreadMsgSeen);
+server.get('/thread', httpServ.getThreads);
+// server.get('/thread/:THREAD_ID/messages', httpServ.getThreadMsgs);
+// server.post('/thread/:THREAD_ID/messages', httpServ.postThreadMsgs);
+// server.post('/apns', httpServ.postAPNs);
+// server.post('/createProvider', httpServ.postCreateProvider);
+// server.post('/thread/:THREAD_ID/message_seen/:MSG_ID', httpServ.postThreadMsgSeen);
+server.post('/createShop',httpServ.postCreateShop);
+server.post('/createOperator',httpServ.postCreateOperator);
+server.post('/createConsultant',httpServ.postCreateConsultant);
 
 // REST API functions
-var servermsg = " HERE";
 
-function respond(req, res, next) {
-  res.contentType = "text/plain";
-  res.send(servermsg);
-  next();
-}
-
-function handleRequestMessage(req, res, next) {
-  res.send('POST API Response!!!');
-  next();
-}
-
+/*
 function postCreateProvider(req, res, next) {
   res.contentType = 'application/json';
   res.charset = 'utf-8';
@@ -412,4 +398,4 @@ function postThreadMsgSeen(req, res, next) {
       res.send(200);
     });
   }
-}
+}*/
