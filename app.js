@@ -1,7 +1,8 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var webSock = require('./webSock');
+var httpServ = require('./httpServ');
 
-var WebSocketServer = require('ws').Server;
 var db = require('./db');
 var botFunc = require('./botFunc');
 // constants data
@@ -14,54 +15,38 @@ server.listen(port, function() {
   console.log('%s listening to %s', server.name, server.url);
 });
 // WebSocket
-var wss = new WebSocketServer({
-  server
-});
-wss.on('connection', function(ws) {
-  console.log("WS connection add " + wss.clients.length);
-  ws.on('close', function(code, message) {
-    console.log("WS CLOSE " + wss.clients.length);
-  });
-});
-
-
+webSock.addServer(server);
 
 server.post('/api/messages', botFunc.connector.listen());
 
-
-
-
-
-
 // REST API
-server.get('/', respond);
-server.post('/request', handleRequestMessage);
+server.get('/', httpServ.respond);
+server.post('/request', httpServ.handleRequestMessage);
 
 server.use(restify.acceptParser(server.acceptable));
 server.use(restify.bodyParser());
 server.use(restify.authorizationParser());
 
-server.get('/thread', getThreads);
-server.get('/thread/:THREAD_ID/messages', getThreadMsgs);
-server.post('/thread/:THREAD_ID/messages', postThreadMsgs);
-server.post('/apns', postAPNs);
-server.post('/createProvider', postCreateProvider);
-server.post('/thread/:THREAD_ID/message_seen/:MSG_ID', postThreadMsgSeen);
+server.get('/thread', httpServ.getThreads);
+server.get('/thread/:THREAD_ID/messages', httpServ.getThreadMsgs);
+server.post('/thread/:THREAD_ID/messages', httpServ.postThreadMsgs);
+// server.post('/apns', httpServ.postAPNs);
+// server.post('/createProvider', httpServ.postCreateProvider);
+server.post('/thread/:THREAD_ID/message_seen/:MSG_ID', httpServ.postThreadMsgSeen);
+server.post('/createShop',httpServ.postCreateShop);
+server.post('/createOperator',httpServ.postCreateOperator);
+server.post('/createConsultant',httpServ.postCreateConsultant);
+
+server.post('/thread/:THREAD_ID/request',httpServ.postThreadRequest);
+server.post('/thread/:THREAD_ID/response',httpServ.postThreadResponse);
+server.get('/shop/:SHOP_ID/request',httpServ.getShopRequest);
+server.get('/shops',httpServ.getShops);
+server.get('/operator',httpServ.getOperator);
+server.get('/thread/:THREAD_ID/user',httpServ.getThreadUser);
 
 // REST API functions
-var servermsg = " HERE";
 
-function respond(req, res, next) {
-  res.contentType = "text/plain";
-  res.send(servermsg);
-  next();
-}
-
-function handleRequestMessage(req, res, next) {
-  res.send('POST API Response!!!');
-  next();
-}
-
+/*
 function postCreateProvider(req, res, next) {
   res.contentType = 'application/json';
   res.charset = 'utf-8';
@@ -419,4 +404,4 @@ function postThreadMsgSeen(req, res, next) {
       res.send(200);
     });
   }
-}
+}*/
