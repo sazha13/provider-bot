@@ -15,7 +15,7 @@ function registerDialogs(bot){
 var helpDialog = function (session, args, next){
   console.log(session.message.text);
   session.send("Покупатель попросил помощи");
-  session.endDialogWithResult({type:'помощь',tags:[],shops:[]});
+  session.endDialogWithResult({type:'help',tags:[],shops:[]});
 };
 
 var whantDialog = [
@@ -77,7 +77,7 @@ var whantDialog = [
             if (!shops.length)
               msgToSend += "Cообщение будет отправлено админу";
             promise1.then(function(){
-              return resolve({testmsg: msgToSend, AI:{type:'желание',tags:tagsFinded,shops:shopsName}});
+              return resolve({testmsg: msgToSend, AI:{type:'wish',tags:tagsFinded,shops:shops}});
             });
 
           });
@@ -117,7 +117,7 @@ var whantDialog = [
 },
 function(session,args){
   session.send("Понял что есть желание, но не понял чего именно хотите");
-  session.endDialogWithResult({type:'желание',tags:[],shops:[]});
+  session.endDialogWithResult({type:'wish',tags:[],shops:[]});
 }];
 
 var onBegin = function (session, args, next) {
@@ -129,7 +129,7 @@ var onDefault = function(session){
   console.log("HERE INTENTS onDefault");
   console.log(session.message.text);
   session.send("Не смог понять чего хотят");
-  session.endDialogWithResult({type:'None',tags:[],shops:[]});
+  session.endDialogWithResult({type:'none',tags:[],shops:[]});
 };
 intents.matches('помощь',helpDialog);
 intents.matches('хочу',whantDialog);

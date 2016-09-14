@@ -94,7 +94,7 @@ var SchemaShopItem = new mongoose.Schema({
   color: String,
   size: [],
   photo: [],
-  priсe: String,
+  price: String,
   comments: String
 });
 var SchemaTag = new mongoose.Schema({
@@ -314,7 +314,7 @@ function CheckAuthUser(authorization){
       if (items.length === 0) {
         return resolve({'auth':false});
       };
-      return resolve({'auth':true, 'AuthUserId': items[0].id});
+      return resolve({'auth':true, 'AuthUserId': items[0].id, 'AuthUser': items[0]});
     });
   });
 }
@@ -485,7 +485,206 @@ function getMsgById(id){
     });
   });
 }
+function getThreadById(id){
+  return new Promise(function(resolve,reject){
+    ThreadV2DB.findById(id, function(err, item){
+      if (err) return reject(err);
+      return resolve(item);
+    });
+  });
+}
+function getMsgsByThread(id){
+  return new Promise(function(resolve,reject){
+    MessageDB.find({'threadId':id}, function(err, items){
+      if (err) return reject(err);
+      return resolve(items);
+    });
+  });
+}
 
+function getShops(){
+  var resp = [];
+  return new Promise(function(resolve,reject){
+    ShopDB.find().exec(function(err, items){
+      if (err) return reject(err);
+      var count = 0;
+      for(var i = 0; i<items.length; i++){
+        addTags2Shop(items[i])
+        .then(function(response){
+          count++;
+          if (count == items.length){
+            res.send(resp);
+          };
+        });
+      }
+      //return resolve(items);
+    });
+  });
+  function addTags2Shop(shop){
+    return new Promise(function(resolve,reject){
+
+      TagDB.find({'shopsId':shop.id}).exec(function(err,items){
+        if (err) return reject(err);
+        shop.tags = [];
+        for (var j = 0; j<items.length; j++){
+          shop.tags.push(items[j].tag);
+        }
+        resp.push(shop);
+        return resolve();
+      });
+    });
+  }
+}
+
+function getOperators(){
+  return new Promise(function(resolve,reject){
+    AuthUserDB.find({'group':'operator'}).exec(function(err,items){
+      if (err) return reject(err);
+      return resolve(items);
+    });
+  });
+}
+
+function getUserByThreadId(id){
+  return new Promise(function(resolve,reject){
+    ThreadV2DB.findById(id).exec(function(err,item){
+      if (err) return reject(err);
+      if (!item) return resolve({});
+      UserDB.findById(item.userId).exec(function(err,item){
+        if (err) return reject(err);
+        return resolve(item);
+      });
+    });
+  });
+}
+
+function saveMsgFromOperator(msg){
+  return new Promise(function(resolve,reject){
+    var record = new MessageDB(msg);
+    record.save();
+    getThreadById(msg.threadId)
+    .then(function(response){
+      if (!response) return;
+      response.messages.push(record.id);
+      response.save();
+    });
+    return resolve(record);
+  });
+}
+
+function saveOrder(order){
+  return new Promise(function(resolve,reject){
+    var record = new OrderDB(order);
+    record.save();
+    return resolve(record);
+  });
+}
+function saveRequestFromOperator(request){
+  return new Promise(function(resolve,reject){
+    var order = new OrderDB(request.order);
+    order.save();
+    var record = new RequestDB();
+    record.orderId = order.id;
+    record.threadId = request.threadId;
+    record.shopId = request.shops;
+    record.operatorId = request.sender.id;
+    record.save();
+    getThreadById(request.threadId)
+    .then(function(response){
+      if (!response) return;
+      response.responses.push({'request':record.id, 'responses':[]});
+      response.save();
+    });
+    var res = {};
+    res.id = record.id;
+    res.order = order;
+    res.threadId = record.threadId;
+    res.shops = record.shopId;
+    res.sender = {'type': 'operator', 'id': record.operatorId};
+    res.sent = record.sentTime.getTime() / 1000 | 0;
+    return resolve(res);
+  });
+}
+
+function saveResponseFromConsultant(resp){
+  return new Promise(function(resolve,reject){
+    var shopItem = new ShopItemDB(resp.shopItem);
+    shopItem.price = ""+resp.shopItem.price;
+    console.log('TEST');
+    console.log(shopItem);
+    console.log(resp.shopItem);
+    shopItem.save();
+    var record = new ResponseDB();
+    record.requestId = resp.requestId;
+    record.shopItem = shopItem.id;
+    record.consultantId = resp.sender.id;
+    record.threadId = resp.threadId;
+    record.operatorId = "";
+
+    getThreadById(record.threadId)
+    .then(function(response){
+      if (!response) return;
+      for (var i = 0; i<response.responses.length;i++){
+        if (response.responses[i].request != record.requestId) continue;
+        response.responses[i].responses.push(record.id);
+        response.save();
+        break;
+      }
+    });
+    var res = {};
+    res.id = record.id;
+    res.shopItem = shopItem;
+    res.threadId = record.threadId;
+    res.requestId = record.requestId;
+    res.operatorId = record.operatorId;
+    res.sender = resp.sender;
+    res.sent = record.sentTime.getTime() / 1000 | 0;
+    return resolve(res);
+  });
+}
+function getShopByConsultantId(id){
+  return new Promise(function(resolve,reject){
+    AuthUserDB.findById(id).exec(function(err,item){
+      if (err) return reject(err);
+      if (!item) return reject();
+      ShopDB.findById(item.shopId).exec(function(err,item){
+        if (err) return reject(err);
+        if (!item) return reject();
+        return resolve(item);
+      });
+    });
+  });
+}
+
+function getRequestById(id){
+  return new Promise(function(resolve,reject){
+    RequestDB.findById(id, function(err, item){
+      if (err) return reject(err);
+      return resolve(item);
+    });
+  });
+}
+
+function getResponseById(id){
+  return new Promise(function(resolve,reject){
+    ResponseDB.findById(id, function(err, item){
+      if (err) return reject(err);
+      return resolve(item);
+    });
+  });
+}
+
+function getOrderById(id){
+  return new Promise(function(resolve,reject){
+    console.log('getOrderById');
+    OrderDB.findById(id, function(err, item){
+      console.log(item);
+      if (err) return reject(err);
+      console.log(item);
+      return resolve(item);
+    });
+  });
+}
 exports.CreateShop = CreateShop;
 exports.CreateAddress = CreateAddress;
 exports.CreateConsultant = CreateConsultant;
@@ -502,6 +701,18 @@ exports.saveMsgFromUser = saveMsgFromUser;
 exports.getThreads = getThreads;
 exports.getUserById = getUserById;
 exports.getMsgById = getMsgById;
+exports.getThreadById = getThreadById;
+exports.getMsgsByThread = getMsgsByThread;
+exports.getShops = getShops;
+exports.getOperators = getOperators;
+exports.getUserByThreadId = getUserByThreadId;
+exports.saveMsgFromOperator = saveMsgFromOperator;
+exports.saveRequestFromOperator = saveRequestFromOperator;
+exports.saveResponseFromConsultant = saveResponseFromConsultant;
+exports.getShopByConsultantId = getShopByConsultantId;
+exports.getRequestById = getRequestById;
+exports.getResponseById = getResponseById;
+exports.getOrderById = getOrderById;
 
 /*exports.MsgDB = MsgDB;
 exports.ChanelDB = ChanelDB;

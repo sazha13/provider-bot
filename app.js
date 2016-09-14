@@ -3,7 +3,6 @@ var builder = require('botbuilder');
 var webSock = require('./webSock');
 var httpServ = require('./httpServ');
 
-
 var db = require('./db');
 var botFunc = require('./botFunc');
 // constants data
@@ -29,14 +28,21 @@ server.use(restify.bodyParser());
 server.use(restify.authorizationParser());
 
 server.get('/thread', httpServ.getThreads);
-// server.get('/thread/:THREAD_ID/messages', httpServ.getThreadMsgs);
-// server.post('/thread/:THREAD_ID/messages', httpServ.postThreadMsgs);
+server.get('/thread/:THREAD_ID/messages', httpServ.getThreadMsgs);
+server.post('/thread/:THREAD_ID/messages', httpServ.postThreadMsgs);
 // server.post('/apns', httpServ.postAPNs);
 // server.post('/createProvider', httpServ.postCreateProvider);
-// server.post('/thread/:THREAD_ID/message_seen/:MSG_ID', httpServ.postThreadMsgSeen);
+server.post('/thread/:THREAD_ID/message_seen/:MSG_ID', httpServ.postThreadMsgSeen);
 server.post('/createShop',httpServ.postCreateShop);
 server.post('/createOperator',httpServ.postCreateOperator);
 server.post('/createConsultant',httpServ.postCreateConsultant);
+
+server.post('/thread/:THREAD_ID/request',httpServ.postThreadRequest);
+server.post('/thread/:THREAD_ID/response',httpServ.postThreadResponse);
+server.get('/shop/:SHOP_ID/request',httpServ.getShopRequest);
+server.get('/shops',httpServ.getShops);
+server.get('/operator',httpServ.getOperator);
+server.get('/thread/:THREAD_ID/user',httpServ.getThreadUser);
 
 // REST API functions
 

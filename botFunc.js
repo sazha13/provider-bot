@@ -12,7 +12,7 @@ var connector = new builder.ChatConnector({
   appPassword: msAppPassword
 });
 
-exports.connector = connector;
+
 var bot = new builder.UniversalBot(connector);
 
 // bot.dialog('/',function(session){
@@ -156,8 +156,41 @@ bot.dialog('/',[
       }
     }
   }
+function SendMsg(address, text, attachments){
+  console.log('SendMsg');
+  console.log(address);
+  console.log(text);
+  console.log(attachments);
+  var reply = new builder.Message();
+  reply.text(text);
+  reply.attachments(attachments);
+  reply.address(address);
+  bot.send(reply,function(err){
+  });
+}
+function SendResponse(address, resp, shop){
+  console.log('SendResponse');
+  console.log(address);
 
+  var reply = new builder.Message();
+  var textmsg = "Магазин: " + shop.name + "\n\n";
+  textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
+  textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
+  textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
+  textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
+  console.log(textmsg);
+  reply.text(textmsg);
+  console.log(resp.shopItem.photo);
+  reply.attachments(resp.shopItem.photo);
+  reply.address(address);
+  console.log('SendResponse');
+  bot.send(reply,function(err){
+  });
+}
 
+exports.connector = connector;
+exports.SendMsg = SendMsg;
+exports.SendResponse = SendResponse;
   // bot Functions
   /*function botDialog(session) {
     console.log("botDialog");
