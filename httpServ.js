@@ -121,8 +121,16 @@ function getThreadMsgs(req, res, next) {
     db.getMsgsByThread(req.params.THREAD_ID)
     .then(function(response) {
       resp.messages = response;
+      return;
+    })
+    .then(function(){
+      return db.getReqResByThread(req.params.THREAD_ID);
+    })
+    .then(function(response){
+      resp.requests = response;
       res.send(resp);
     });
+
   }
 }
 

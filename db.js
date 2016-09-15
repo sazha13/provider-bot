@@ -389,7 +389,7 @@ function AddChanel(msg){
   return new Promise(function(resolve,reject){
     UserDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
       if (err) return reject(err);
-      if (item != null) return resolve(item._id);
+      if (item != null) return resolve(item.id);
       var record = new UserDB(msg);
       if (msg.sourceEvent && msg.sourceEvent.message && msg.sourceEvent.message.from) {
         record.username = msg.sourceEvent.message.from.first_name + ' ' +
@@ -398,7 +398,7 @@ function AddChanel(msg){
         record.username = msg.address.user.name;
       }
       record.save();
-      return resolve(record._id);
+      return resolve(record.id);
     });
   });
 }
@@ -481,7 +481,9 @@ function getMsgById(id){
   return new Promise(function(resolve,reject){
     MessageDB.findById(id, function(err, item){
       if (err) return reject(err);
-      return resolve(item);
+      if (!item) return resolve(item);
+      var result = getReadableMsg(item);
+      return resolve(result);
     });
   });
 }
@@ -497,9 +499,93 @@ function getMsgsByThread(id){
   return new Promise(function(resolve,reject){
     MessageDB.find({'threadId':id}, function(err, items){
       if (err) return reject(err);
-      return resolve(items);
+      var result = [];
+      for (var i = 0; i<items.length; i++){
+        var tmp = getReadableMsg(items[i]);
+        result.push(tmp);
+      }
+      return resolve(result);
     });
   });
+}
+
+function getReadableMsg(item){
+  var result = {}
+  result.id = item.id;
+  result.text = item.text;
+  result.attachments = item.attachments ;
+  result.threadId = item.threadId ;
+  result.AI = item.AI ;
+  result.sender = item.sender ;
+  result.sent = item.sentTime.getTime() / 1000 | 0;
+  return result;
+}
+
+function getRequestByThread(id){
+  return new Promise(function(resolve,reject){
+    RequestDB.find({'threadId':id}, function(err, items){
+      if (err) return reject(err);
+      var result = [];
+      for (var i = 0; i<items.length; i++){
+        var tmp = getReadableReq(items[i]);
+        result.push(tmp);
+      }
+      return resolve(result);
+    });
+  });
+}
+
+function getReadableResp(item){
+  var result = {};
+  result.id = item.id;
+  result.requestId = item.requestId;
+  result.threadId = item.threadId;
+  result.consultantId = item.consultantId;
+  result.operatorId = item.operatorId;
+  result.sent = item.sentTime.getTime() / 1000 | 0;
+  return result;
+}
+function getReqResByThread(id){
+  return new Promise(function(resolve,reject){
+    RequestDB.find({'threadId':id}, function(err, items){
+      if (err) return reject(err);
+      var result = [];
+      var count = 0;
+      for (var i = 0; i<items.length; i++){
+        var tmp = getReadableReq(items[i]);
+        addResponse(items[i].id)
+        .then(function(respons){
+          result.push({'request':tmp, 'responses':respons});
+          count++;
+          if (count == items.length)return resolve(result);
+        });
+      }
+    });
+    function addResponse(reqid){
+      return new Promise(function(resolve,reject){
+        var responses = [];
+        ResponseDB.find({'requestId':reqid}).exec(function(err,item){
+          if (err) return reject(err);
+          for (var j = 0; j<item.length; j++){
+            responses.push(getReadableResp(item[j]));
+          }
+          return resolve(responses);
+        });
+      });
+    }
+  });
+}
+
+function getReadableReq(item)
+{
+  var result = {};
+  result.orderId = item.orderId;
+  result.threadId = item.threadId;
+  result.shopId = item.shopId;
+  result.operatorId = item.operatorId;
+  result.sent = item.sentTime.getTime() / 1000 | 0;
+  result.id = item.id;
+  return result;
 }
 
 function getShops(){
@@ -597,7 +683,7 @@ function saveRequestFromOperator(request){
     });
     var res = {};
     res.id = record.id;
-    res.order = order;
+    res.order = getReadableOrder(order);
     res.threadId = record.threadId;
     res.shops = record.shopId;
     res.sender = {'type': 'operator', 'id': record.operatorId};
@@ -605,6 +691,18 @@ function saveRequestFromOperator(request){
     return resolve(res);
   });
 }
+
+function getReadableOrder(item){
+  var result = {};
+  result.id = item.id;
+  result.item = item.item;
+  result.color = item.color;
+  result.size = item.size;
+  result.photo = item.photo;
+  result.comments = item.comments;
+  return result;
+}
+
 
 function saveResponseFromConsultant(resp){
   return new Promise(function(resolve,reject){
@@ -620,7 +718,7 @@ function saveResponseFromConsultant(resp){
     record.consultantId = resp.sender.id;
     record.threadId = resp.threadId;
     record.operatorId = "";
-
+    record.save();
     getThreadById(record.threadId)
     .then(function(response){
       if (!response) return;
@@ -633,14 +731,27 @@ function saveResponseFromConsultant(resp){
     });
     var res = {};
     res.id = record.id;
-    res.shopItem = shopItem;
+    res.shopItem = getReadableShopItem(shopItem);
     res.threadId = record.threadId;
     res.requestId = record.requestId;
     res.operatorId = record.operatorId;
     res.sender = resp.sender;
     res.sent = record.sentTime.getTime() / 1000 | 0;
+
     return resolve(res);
   });
+}
+
+function getReadableShopItem(item){
+  var result = {};
+  result.id = item.id;
+  result.item = item.item;
+  result.color = item.color;
+  result.size = item.size;
+  result.price = item.price;
+  result.photo = item.photo;
+  result.comments = item.comments;
+  return result;
 }
 function getShopByConsultantId(id){
   return new Promise(function(resolve,reject){
@@ -676,12 +787,12 @@ function getResponseById(id){
 
 function getOrderById(id){
   return new Promise(function(resolve,reject){
-    console.log('getOrderById');
     OrderDB.findById(id, function(err, item){
-      console.log(item);
       if (err) return reject(err);
-      console.log(item);
-      return resolve(item);
+      if (!item) return resolve();
+      var result = getReadableOrder(item);
+
+      return resolve(result);
     });
   });
 }
@@ -711,6 +822,8 @@ exports.saveRequestFromOperator = saveRequestFromOperator;
 exports.saveResponseFromConsultant = saveResponseFromConsultant;
 exports.getShopByConsultantId = getShopByConsultantId;
 exports.getRequestById = getRequestById;
+exports.getRequestByThread = getRequestByThread;
+exports.getReqResByThread = getReqResByThread;
 exports.getResponseById = getResponseById;
 exports.getOrderById = getOrderById;
 
