@@ -41,7 +41,6 @@ var whantDialog = [
             for (var i = 0; i<response.length; i++) {
               tags.push(response[i].tag);
             }
-
             for (var j = 0; j<entities.length; j++) {
               tagsFinded.push(entities[j].entity);
               match = builder.EntityRecognizer.findAllMatches(tags, entities[j].entity);
@@ -72,11 +71,15 @@ var whantDialog = [
                     return resolve();
                 });
               }
+              if (!shops.length){
+                msgToSend += "Cообщение будет отправлено админу";
+                return resolve();
+              }
             });
 
-            if (!shops.length)
-              msgToSend += "Cообщение будет отправлено админу";
+
             promise1.then(function(){
+              console.log(shops);
               return resolve({testmsg: msgToSend, AI:{type:'wish',tags:tagsFinded,shops:shops}});
             });
 
