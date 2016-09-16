@@ -1,5 +1,7 @@
 console.log('LOAD mongoose');
 var mongoose = require('mongoose');
+var choiceShoesSize = require('./constants.js').choiceShoesSize;
+var choiceClothesSize = require('./constants.js').choiceClothesSize;
 //var Promise = require('Promise');
 
 // mongoose
@@ -588,6 +590,17 @@ function getReadableReq(item)
   return result;
 }
 
+function getReadableShop(item)
+{
+  var result = {};
+  result.id = item.id;
+  result.name = item.name;
+  result.addressId = item.addressId;
+  result.phone = item.phone;
+  result.comments = item.comments;
+  return result;
+}
+
 function getShops(){
   var resp = [];
   return new Promise(function(resolve,reject){
@@ -595,11 +608,13 @@ function getShops(){
       if (err) return reject(err);
       var count = 0;
       for(var i = 0; i<items.length; i++){
-        addTags2Shop(items[i])
+        var shop = getReadableShop(items[i]);
+        addTags2Shop(shop)
         .then(function(response){
           count++;
+          resp.push(response);
           if (count == items.length){
-            res.send(resp);
+            return resolve(resp);
           };
         });
       }
@@ -615,20 +630,59 @@ function getShops(){
         for (var j = 0; j<items.length; j++){
           shop.tags.push(items[j].tag);
         }
-        resp.push(shop);
-        return resolve();
+        console.log(shop);
+        //resp.push(shop);
+        return resolve(shop);
       });
     });
   }
+}
+
+function getReadableAuthUser(item)
+{
+
+  var result = {};
+  result.id = item.id;
+  result.name = item.name;
+  result.login = item.login;
+  result.phone = item.phone;
+  result.group = item.group;
+  result.shopId = item.shopId;
+  return result;
 }
 
 function getOperators(){
   return new Promise(function(resolve,reject){
     AuthUserDB.find({'group':'operator'}).exec(function(err,items){
       if (err) return reject(err);
-      return resolve(items);
+      var result = [];
+      for (var i = 0; i<items.length; i++){
+        result.push(getReadableAuthUser(items[i]));
+      }
+      return resolve(result);
     });
   });
+}
+function getReadableUser(item)
+{
+  var result = {};
+  result.id = item.id;
+  result.username = item.username;
+  result.form = {};
+  console.log('here');
+  if (!item.userData || !item.userData.profile) return result;
+  console.log('here1');
+  result.form.name = item.userData.profile.name;
+  console.log('here2');
+  result.form.sex = item.userData.profile.sex;
+  result.form.size = {'clothes':[],'shoes':[]};
+  console.log('here3');
+  
+  result.form.size.clothes = choiceClothesSize.slice(item.userData.profile.choiceClothesSmall,item.userData.profile.choiceClothesLarge+1);
+  console.log('here4');
+  result.form.size.shoes = choiceShoesSize.slice(item.userData.profile.choiceShoesSmall,item.userData.profile.choiceShoesLarge+1);
+console.log('here5');
+  return result;
 }
 
 function getUserByThreadId(id){
@@ -638,7 +692,9 @@ function getUserByThreadId(id){
       if (!item) return resolve({});
       UserDB.findById(item.userId).exec(function(err,item){
         if (err) return reject(err);
-        return resolve(item);
+        if (!item) return resolve(item);
+        var result = getReadableUser(item);
+        return resolve(result);
       });
     });
   });

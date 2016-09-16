@@ -345,6 +345,7 @@ function getShopRequest(req, res, next) {
 
 function getShops(req, res, next) {
   var resp = {};
+  console.log('getShops');
   db.getShops()
   .then(function(response) {
     res.send(response);
