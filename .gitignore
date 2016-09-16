@@ -2,3 +2,4 @@
 *.bat
 *.dat
 *.txt
+node_modules
