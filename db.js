@@ -669,19 +669,13 @@ function getReadableUser(item)
   result.id = item.id;
   result.username = item.username;
   result.form = {};
-  console.log('here');
   if (!item.userData || !item.userData.profile) return result;
-  console.log('here1');
   result.form.name = item.userData.profile.name;
-  console.log('here2');
   result.form.sex = item.userData.profile.sex;
   result.form.size = {'clothes':[],'shoes':[]};
-  console.log('here3');
-  
+
   result.form.size.clothes = choiceClothesSize.slice(item.userData.profile.choiceClothesSmall,item.userData.profile.choiceClothesLarge+1);
-  console.log('here4');
   result.form.size.shoes = choiceShoesSize.slice(item.userData.profile.choiceShoesSmall,item.userData.profile.choiceShoesLarge+1);
-console.log('here5');
   return result;
 }
 

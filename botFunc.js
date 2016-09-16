@@ -24,6 +24,8 @@ intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
   function(session, args, next){
+    console.log("session");
+    console.log(session);
     if (session.message.text == '/reset')
     {
       onBoard.resetAllData(session)
