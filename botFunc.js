@@ -1,7 +1,7 @@
 var db = require('./db');
 var builder = require('botbuilder');
 var onBoard = require('./onBoarding');
-//var intentDialog = require('./intentDialog');
+var intentDialog = require('./intentDialog');
 
 var msAppId = process.env.MICROSOFT_APP_ID;
 var msAppPassword = process.env.MICROSOFT_APP_PASSWORD;
@@ -20,13 +20,9 @@ var bot = new builder.UniversalBot(connector);
 // });
 // bot.dialog('/', intents);
 onBoard.registerDialogs(bot);
-//intentDialog.registerDialogs(bot);
-bot.dialog('/',function(session,args,next){
-  console.log('HERE');
-  console.log(session);
-  session.send("Привет");
-});
-/*bot.dialog('/',[
+intentDialog.registerDialogs(bot);
+
+bot.dialog('/',[
   function(session, args, next){
     console.log("session");
     console.log(session);
@@ -73,7 +69,7 @@ bot.dialog('/',function(session,args,next){
 
     db.saveMsgFromUser(session.message,results);
 
-  }]);*/
+  }]);
 
   function botDialog(session) {
     console.log("botDialog");
