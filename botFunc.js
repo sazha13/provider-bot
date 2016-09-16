@@ -21,8 +21,12 @@ var bot = new builder.UniversalBot(connector);
 // bot.dialog('/', intents);
 onBoard.registerDialogs(bot);
 intentDialog.registerDialogs(bot);
-
-bot.dialog('/',[
+bot.dialog('/',function(session,args,next){
+  console.log('HERE');
+  console.log(session);
+  session.send("Привет");
+});
+/*bot.dialog('/',[
   function(session, args, next){
     console.log("session");
     console.log(session);
@@ -69,7 +73,7 @@ bot.dialog('/',[
 
     db.saveMsgFromUser(session.message,results);
 
-  }]);
+  }]);*/
 
   function botDialog(session) {
     console.log("botDialog");
