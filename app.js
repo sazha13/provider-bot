@@ -39,10 +39,13 @@ server.post('/createConsultant',httpServ.postCreateConsultant);
 
 server.post('/thread/:THREAD_ID/request',httpServ.postThreadRequest);
 server.post('/thread/:THREAD_ID/response',httpServ.postThreadResponse);
-server.get('/shop/:SHOP_ID/request',httpServ.getShopRequest);
+// server.get('/shop/:SHOP_ID/request',httpServ.getShopRequest);
+server.get('/consultant/request',httpServ.getConsultantRequest);
 server.get('/shops',httpServ.getShops);
 server.get('/operator',httpServ.getOperator);
 server.get('/thread/:THREAD_ID/user',httpServ.getThreadUser);
+server.get('/order/:ORDER_ID',httpServ.getOrder);
+server.get('/shopItem/:SHOP_ITEM_ID',httpServ.getShopItem);
 
 // REST API functions
 

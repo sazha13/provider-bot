@@ -89,6 +89,7 @@ var SchemaResponse = new mongoose.Schema({
   threadId: String,
   consultantId: String,
   operatorId: String,
+  shopItemId: String,
   sentTime: {type: Date, default: Date.now}
 });
 var SchemaShopItem = new mongoose.Schema({
@@ -158,7 +159,8 @@ var SchemaUser = new mongoose.Schema({
 var SchemaThreadV2 = new mongoose.Schema({
   userId: String,
   operatorId: String,
-  responses: [],
+  responses: [{request: String,
+              responses:[]}],
   messages: []
 });
 
@@ -544,6 +546,7 @@ function getReadableResp(item){
   result.threadId = item.threadId;
   result.consultantId = item.consultantId;
   result.operatorId = item.operatorId;
+  result.shopItemId = item.shopItemId;
   result.sent = item.sentTime.getTime() / 1000 | 0;
   return result;
 }
@@ -758,13 +761,10 @@ function saveResponseFromConsultant(resp){
   return new Promise(function(resolve,reject){
     var shopItem = new ShopItemDB(resp.shopItem);
     shopItem.price = ""+resp.shopItem.price;
-    console.log('TEST');
-    console.log(shopItem);
-    console.log(resp.shopItem);
     shopItem.save();
     var record = new ResponseDB();
     record.requestId = resp.requestId;
-    record.shopItem = shopItem.id;
+    record.shopItemId = shopItem.id;
     record.consultantId = resp.sender.id;
     record.threadId = resp.threadId;
     record.operatorId = "";
@@ -774,8 +774,11 @@ function saveResponseFromConsultant(resp){
       if (!response) return;
       for (var i = 0; i<response.responses.length;i++){
         if (response.responses[i].request != record.requestId) continue;
-        response.responses[i].responses.push(record.id);
+        console.log(record.id);
+        response.responses[i].responses.push(""+record.id);
+        console.log(response.responses[i]);
         response.save();
+        console.log(response.responses[i]);
         break;
       }
     });
@@ -846,6 +849,144 @@ function getOrderById(id){
     });
   });
 }
+
+function getResponseByConsultant(id){
+  return new Promise(function(resolve,reject){
+    ResponseDB.find('consultantId' == id, function(err, items){
+      if (err) return reject(err);
+      if (!items.length) return resolve();
+      var result = getReadableResp(items);
+      return resolve(result);
+    });
+  });
+}
+function getResponseByConsultantId(id){
+  return new Promise(function(resolve,reject){
+    ResponseDB.find('consultantId' == id, function(err, items){
+      if (err) return reject(err);
+      if (!items.length) return resolve([]);
+      var result = [];
+      for (var i = 0; i<items.length;i++){
+        result.push(getReadableResp(items[i]));
+      }
+      return resolve(result);
+    });
+  });
+}
+
+function getRequestByShopId(id){
+  return new Promise(function(resolve,reject){
+    RequestDB.find({'shopId':id} , function(err, items){
+      if (err) return reject(err);
+      if (!items.length) return resolve([]);
+      var result = [];
+      for (var i = 0; i<items.length;i++){
+        result.push(getReadableReq(items[i]));
+      }
+      return resolve(result);
+    });
+  });
+}
+
+function getReqRespByConsultant(consult){
+  return new Promise(function(resolve,reject){
+    var result = [];
+    getRequestByShopId(consult.shopId)
+    .then(function(requests){
+      getResponseByConsultantId(consult.id)
+      .then(function(responses){
+        var count = 0;
+        for (var i = 0; i<requests.length; i++){
+          addReadableOrder(i)
+          .then(function(){
+            count++;
+            console.log('count '+ count +' requests.length '+ requests.length);
+            if (count==requests.length){
+              console.log('count '+ count +' requests.length '+ requests.length);
+              return resolve(result);
+            }
+
+          })
+        }
+        function addReadableOrder(tmpi){
+
+          return new Promise(function(resolve,reject){
+            getOrderById(requests[tmpi].orderId)
+            .then(function(order){
+
+              requests[tmpi].order = order;
+              delete requests[tmpi].orderId;
+              result.push({'request':requests[tmpi],'responses':[]});
+
+              var countj=0;
+              console.log('addReadableOrder'+tmpi);
+              var flag = false;
+              for (var j = 0 ; j<responses.length;j++){
+                if (requests[tmpi].id == responses[j].requestId){
+                  flag = true;
+                  console.log('addReadableOrder HERERERE');
+                  addReadableShopItem(j)
+                  .then(function(resp1){
+                    countj++;
+                    result[tmpi].responses = resp1;
+
+                    if(countj==responses.length){
+                      console.log('countj '+ countj +' responses.length '+ responses.length);
+                      return resolve(result);
+                    }
+                  });
+
+                }
+              }
+              if (!flag)
+                return resolve();
+              console.log('addReadableOrder END'+tmpi);
+
+              function addReadableShopItem(tmpj){
+                console.log('addReadableShopItem'+tmpj);
+                return new Promise(function(resolve,reject){
+                  var resp = [];
+                  console.log("here1");
+                  getShopItemId(responses[tmpj].shopItemId)
+                  .then(function(shopItem){
+                    console.log("here2");
+                    responses[tmpj].shopItem = shopItem;
+                    delete responses[tmpj].shopItemId;
+                    resp.push(responses[tmpj]);
+                    return resolve(resp);
+                  });
+                });
+              };//addReadableShopItem
+            });
+          });
+
+        };
+
+      });
+    });
+  });
+}
+function getOrderId(id){
+  return new Promise(function(resolve,reject){
+    OrderDB.findById( id, function(err, item){
+      if (err) return reject(err);
+      if (!item) return resolve();
+      var result = getReadableOrder(item);
+      return resolve(result);
+    });
+  });
+}
+
+function getShopItemId(id){
+  return new Promise(function(resolve,reject){
+    ShopItemDB.findById( id, function(err, item){
+      if (err) return reject(err);
+      if (!item) return resolve();
+      var result = getReadableShopItem(item);
+      return resolve(result);
+    });
+  });
+}
 exports.CreateShop = CreateShop;
 exports.CreateAddress = CreateAddress;
 exports.CreateConsultant = CreateConsultant;
@@ -876,7 +1017,9 @@ exports.getRequestByThread = getRequestByThread;
 exports.getReqResByThread = getReqResByThread;
 exports.getResponseById = getResponseById;
 exports.getOrderById = getOrderById;
-
+exports.getReqRespByConsultant = getReqRespByConsultant;
+exports.getShopItemId = getShopItemId;
+exports.getOrderId = getOrderId;
 /*exports.MsgDB = MsgDB;
 exports.ChanelDB = ChanelDB;
 exports.ProviderDB = ProviderDB;

@@ -76,27 +76,44 @@ function getThreads(req, res, next) {
          return db.getRequestById(thread.responses[thread.responses.length - 1].request);
       })
       .then(function(request){
-        console.log("HERE");
-
          if (!request) return;
          newThread.lastRequest = {};
          newThread.lastRequest.type = 'request';
          newThread.lastRequest.sender = {'type': 'operator', 'id': request.operatorId};
          //newThread.lastRequest.order = request.orderId;
-         console.log('request.orderId');
-         console.log(request.orderId);
          return request.orderId;
       })
       .then(function(orderId){
-        console.log(orderId);
         return db.getOrderById(orderId);
       })
       .then(function(order){
-        console.log("order");
-        console.log(order);
         newThread.lastRequest.order = order;
         return;
       })
+      // .then(function(){
+      //    var respCount = thread.responses.length - 1;
+      //    return db.getResponseById(thread.responses[respCount].
+      //      responses[thread.responses[respCount].responses.length - 1]);
+      // })
+      // .then(function(resp){
+      //    if (!resp) return;
+      //    newThread.lastResponse = {};
+      //    newThread.lastResponse.type = 'response';
+      //    newThread.lastResponse.sender = {'type': 'consultant', 'id': resp.consultantId};
+      //    //newThread.lastRequest.order = request.orderId;
+      //    return resp.shopItemId;
+      // })
+      // .then(function(shopItemId){
+      //   return db.getShopItemId(shopItemId);
+      // })
+      // .then(function(shopItem){
+      //   console.log("shopItem");
+      //   console.log(shopItem);
+      //   newThread.lastResponse.shopItem = shopItem;
+      //   console.log('newThread!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      //   console.log(newThread);
+      //   return;
+      // })
       .then(function(response) {
         //result.push(newThread);
         return resolve(newThread);
@@ -342,6 +359,25 @@ function getShopRequest(req, res, next) {
     };
   }
 }
+function getConsultantRequest(req, res, next) {
+  var resp = {};
+  db.CheckAuthUser(req.authorization)
+  .then(OnAuthOk);
+
+  function OnAuthOk(result) {
+    if (!result.auth) {
+      res.send(401);
+      return;
+    };
+    if (result.AuthUser.group == 'consultant'){
+      db.getReqRespByConsultant(result.AuthUser)
+      .then(function(reqres){
+        res.send(reqres);
+      });
+    }
+
+  }
+}
 
 function getShops(req, res, next) {
   var resp = {};
@@ -368,6 +404,21 @@ function getThreadUser(req, res, next) {
   });
 }
 
+function getOrder(req, res, next) {
+  var resp = {};
+  db.getOrderId(req.params.ORDER_ID)
+  .then(function(response) {
+    res.send(response);
+  });
+}
+function getShopItem(req, res, next) {
+  var resp = {};
+  db.getShopItemId(req.params.SHOP_ITEM_ID)
+  .then(function(response) {
+    res.send(response);
+  });
+}
+
 exports.respond = respond;
 exports.handleRequestMessage = handleRequestMessage;
 exports.getThreads = getThreads;//доделать
@@ -385,3 +436,6 @@ exports.getShops = getShops;
 exports.getOperator = getOperator;
 exports.getThreadUser = getThreadUser;
 exports.getShopRequest = getShopRequest; //не доделана
+exports.getConsultantRequest = getConsultantRequest;
+exports.getShopItem = getShopItem;
+exports.getOrder = getOrder;
