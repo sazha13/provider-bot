@@ -31,8 +31,6 @@ function getThreads(req, res, next) {
           .then(function(response) {
             count++;
             resp.push(response);
-            console.log(response);
-            console.log(count);
             if (count == threads.length) {
               return resolve();
             }
@@ -42,7 +40,6 @@ function getThreads(req, res, next) {
       });
     });
     promise.then(function() {
-      console.log(resp);
       res.send(resp);
     });
   }
@@ -69,27 +66,32 @@ function getThreads(req, res, next) {
         newThread.lastMessage.type = 'message';
         newThread.lastMessage.sender = msg.sender;
         newThread.lastMessage.message = msg;
-        console.log("HERE");
         return;
       })
       .then(function(){
-         return db.getRequestById(thread.responses[thread.responses.length - 1].request);
+        return db.getLastReqOrResByThreadId(newThread.threadId);
       })
-      .then(function(request){
-         if (!request) return;
-         newThread.lastRequest = {};
-         newThread.lastRequest.type = 'request';
-         newThread.lastRequest.sender = {'type': 'operator', 'id': request.operatorId};
-         //newThread.lastRequest.order = request.orderId;
-         return request.orderId;
+      .then(function(lastreqres){
+        newThread.lastReqRes = lastreqres;
       })
-      .then(function(orderId){
-        return db.getOrderById(orderId);
-      })
-      .then(function(order){
-        newThread.lastRequest.order = order;
-        return;
-      })
+      // .then(function(){
+      //    return db.getRequestById(thread.responses[thread.responses.length - 1].request);
+      // })
+      // .then(function(request){
+      //    if (!request) return;
+      //    newThread.lastRequest = {};
+      //    newThread.lastRequest.type = 'request';
+      //    newThread.lastRequest.sender = {'type': 'operator', 'id': request.operatorId};
+      //    //newThread.lastRequest.order = request.orderId;
+      //    return request.orderId;
+      // })
+      // .then(function(orderId){
+      //   return db.getOrderById(orderId);
+      // })
+      // .then(function(order){
+      //   newThread.lastRequest.order = order;
+      //   return;
+      // })
       // .then(function(){
       //    var respCount = thread.responses.length - 1;
       //    return db.getResponseById(thread.responses[respCount].
@@ -233,14 +235,11 @@ function postCreateOperator(req, res, next) {
     operator.login = req.authorization.basic.username;
     operator.password = req.authorization.basic.password;
   }
-  console.log(operator);
   db.CreateOperator(operator)
   .then(function(result) {
-    console.log('SEND 201');
     res.send(201);
   })
   .catch(function(result) {
-    console.log('SEND 401');
     res.send(401);
   });
 }
@@ -253,14 +252,11 @@ function postCreateConsultant(req, res, next) {
     consultant.login = req.authorization.basic.username;
     consultant.password = req.authorization.basic.password;
   }
-  console.log(consultant);
   db.CreateConsultant(consultant,null,consultant.shop)
   .then(function(result) {
-    console.log('SEND 201');
     res.send(201);
   })
   .catch(function(result) {
-    console.log('SEND 401');
     res.send(401);
   });
 }
@@ -293,9 +289,7 @@ function postThreadRequest(req, res, next) {
           res.send(401);
           return;
         };
-        console.log('HERE');
         response.unseen = 0;
-        console.log(response);
         res.send(response);
       });
     });
@@ -381,7 +375,6 @@ function getConsultantRequest(req, res, next) {
 
 function getShops(req, res, next) {
   var resp = {};
-  console.log('getShops');
   db.getShops()
   .then(function(response) {
     res.send(response);
@@ -406,7 +399,7 @@ function getThreadUser(req, res, next) {
 
 function getOrder(req, res, next) {
   var resp = {};
-  db.getOrderId(req.params.ORDER_ID)
+  db.getOrderById(req.params.ORDER_ID)
   .then(function(response) {
     res.send(response);
   });

@@ -184,12 +184,97 @@ var MessageDB = mongoose.model('Message',SchemaMessage);
 var UserDB = mongoose.model('User',SchemaUser);
 var ThreadV2DB = mongoose.model('ThreadV2',SchemaThreadV2);
 
+function getReadableResp(item){
+  var result = {};
+  result.id = item.id;
+  result.requestId = item.requestId;
+  result.threadId = item.threadId;
+  result.consultantId = item.consultantId;
+  result.operatorId = item.operatorId;
+  result.shopItemId = item.shopItemId;
+  result.sent = item.sentTime.getTime() / 1000 | 0;
+  return result;
+}
+function getReadableMsg(item){
+  var result = {}
+  result.id = item.id;
+  result.text = item.text;
+  result.attachments = item.attachments ;
+  result.threadId = item.threadId ;
+  result.AI = item.AI ;
+  result.sender = item.sender ;
+  result.sent = item.sentTime.getTime() / 1000 | 0;
+  return result;
+}
+function getReadableReq(item){
+  var result = {};
+  result.orderId = item.orderId;
+  result.threadId = item.threadId;
+  result.shopId = item.shopId;
+  result.operatorId = item.operatorId;
+  result.sent = item.sentTime.getTime() / 1000 | 0;
+  result.id = item.id;
+  return result;
+}
+function getReadableShop(item){
+  var result = {};
+  result.id = item.id;
+  result.name = item.name;
+  result.addressId = item.addressId;
+  result.phone = item.phone;
+  result.comments = item.comments;
+  return result;
+}
+function getReadableAuthUser(item){
+  var result = {};
+  result.id = item.id;
+  result.name = item.name;
+  result.login = item.login;
+  result.phone = item.phone;
+  result.group = item.group;
+  result.shopId = item.shopId;
+  return result;
+}
+function getReadableUser(item){
+  var result = {};
+  result.id = item.id;
+  result.username = item.username;
+  result.form = {};
+  if (!item.userData || !item.userData.profile) return result;
+  result.form.name = item.userData.profile.name;
+  result.form.sex = item.userData.profile.sex;
+  result.form.size = {'clothes':[],'shoes':[]};
+
+  result.form.size.clothes = choiceClothesSize.slice(item.userData.profile.choiceClothesSmall,item.userData.profile.choiceClothesLarge+1);
+  result.form.size.shoes = choiceShoesSize.slice(item.userData.profile.choiceShoesSmall,item.userData.profile.choiceShoesLarge+1);
+  return result;
+}
+function getReadableOrder(item){
+  var result = {};
+  result.id = item.id;
+  result.item = item.item;
+  result.color = item.color;
+  result.size = item.size;
+  result.photo = item.photo;
+  result.comments = item.comments;
+  return result;
+}
+function getReadableShopItem(item){
+  var result = {};
+  result.id = item.id;
+  result.item = item.item;
+  result.color = item.color;
+  result.size = item.size;
+  result.price = item.price;
+  result.photo = item.photo;
+  result.comments = item.comments;
+  return result;
+}
+
 function CreateAddress(address){
     address = address || {};
     return new Promise(function(resolve,reject){
       if (!address.city) return resolve(0);
-      console.log('address ' );
-      console.log(address);
       AddressDB.findOne({'city':address.city, 'street': address.street,
                         'house': address.house}).exec(OnFind);
       function OnFind(err,item){
@@ -201,7 +286,6 @@ function CreateAddress(address){
       }
     });
 }
-
 function CreateShop(shop){
   shop = shop || {};
   return new Promise(function(resolve,reject){
@@ -216,18 +300,13 @@ function CreateShop(shop){
           record.addressId = response;
         }
         record.save();
-        console.log(shop.tags);
         AddTags(shop.tags,record.id);
-        console.log(record);
         return resolve(record.id);
       });
     }
   });
 }
-
 function CreateConsultant(consultant,shopId,shop){
-  console.log(consultant);
-  console.log(shop);
   consultant = consultant || {};
   return new Promise(function(resolve,reject){
     AuthUserDB.findOne({'login':consultant.login}).exec(OnFind);
@@ -264,7 +343,24 @@ function CreateConsultant(consultant,shopId,shop){
     }
   });
 }
-
+function CreateOperator(operator){
+  operator = operator || {};
+  return new Promise(function(resolve,reject){
+    AuthUserDB.findOne({'login':operator.login}).exec(OnFind);
+    function OnFind(err,item){
+      if (err){
+        return reject(err);
+      }
+      if (item){
+        return resolve(item.id);
+      }
+      var record = new AuthUserDB(operator);
+      record.group = 'operator';
+      record.save();
+      return resolve(record.id);
+    }
+  });
+}
 function AddTags(tags,shopId){
   tags = tags|| [];
   if (tags.length == 0) return 0;
@@ -303,45 +399,123 @@ function AddTags(tags,shopId){
     item.save();
   }
 }
-
-function CheckAuthUser(authorization){
+function AddChanel(msg){
   return new Promise(function(resolve,reject){
-    if (authorization === null ||
-      authorization.basic === null ||
-      authorization.basic.username === null ||
-      authorization.basic.password === null) {
-      return resolve({'auth':false});
-    }
-    AuthUserDB.find({
-      'login': authorization.basic.username
-    }).limit(1).exec(function(err, items) {
-      if (items.length === 0) {
-        return resolve({'auth':false});
-      };
-      return resolve({'auth':true, 'AuthUserId': items[0].id, 'AuthUser': items[0]});
+    UserDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
+      if (err) return reject(err);
+      if (item != null) return resolve(item.id);
+      var record = new UserDB(msg);
+      if (msg.sourceEvent && msg.sourceEvent.message && msg.sourceEvent.message.from) {
+        record.username = msg.sourceEvent.message.from.first_name + ' ' +
+          msg.sourceEvent.message.from.last_name;
+      } else {
+        record.username = msg.address.user.name;
+      }
+      record.save();
+      return resolve(record.id);
     });
   });
 }
+function saveMsgFromUser(msg,AI){
+  var record = new MessageDB({text: msg.text, attachments: msg.attachments, AI:AI});
 
-function CreateOperator(operator){
-  operator = operator || {};
+    AddChanel(msg)
+    .then(function(id){
+      record.sender = {'type':'user','id':id};
+      ThreadV2DB.findOne({'userId': id})
+      .exec(function(err,item){
+        if (err) return reject(err);
+        if (item) {
+          item.messages.push(record.id);
+          item.save();
+          record.threadId = item.id;
+          record.save();
+        };
+
+      });
+    });
+
+}
+function saveMsgFromOperator(msg){
   return new Promise(function(resolve,reject){
-    AuthUserDB.findOne({'login':operator.login}).exec(OnFind);
-    function OnFind(err,item){
-      if (err){
-        return reject(err);
-      }
-      if (item){
-        return resolve(item.id);
-      }
-      var record = new AuthUserDB(operator);
-      record.group = 'operator';
-      record.save();
-      return resolve(record.id);
-    }
+    var record = new MessageDB(msg);
+    record.save();
+    getThreadById(msg.threadId)
+    .then(function(response){
+      if (!response) return;
+      response.messages.push(record.id);
+      response.save();
+    });
+    return resolve(record);
   });
 }
+function saveOrder(order){
+  return new Promise(function(resolve,reject){
+    var record = new OrderDB(order);
+    record.save();
+    return resolve(record);
+  });
+}
+function saveRequestFromOperator(request){
+  return new Promise(function(resolve,reject){
+    var order = new OrderDB(request.order);
+    order.save();
+    var record = new RequestDB();
+    record.orderId = order.id;
+    record.threadId = request.threadId;
+    record.shopId = request.shops;
+    record.operatorId = request.sender.id;
+    record.save();
+    getThreadById(request.threadId)
+    .then(function(response){
+      if (!response) return;
+      response.responses.push({'request':record.id, 'responses':[]});
+      response.save();
+    });
+    var res = {};
+    res.id = record.id;
+    res.order = getReadableOrder(order);
+    res.threadId = record.threadId;
+    res.shops = record.shopId;
+    res.sender = {'type': 'operator', 'id': record.operatorId};
+    res.sent = record.sentTime.getTime() / 1000 | 0;
+    return resolve(res);
+  });
+}
+function saveResponseFromConsultant(resp){
+  return new Promise(function(resolve,reject){
+    var shopItem = new ShopItemDB(resp.shopItem);
+    shopItem.price = ""+resp.shopItem.price;
+    shopItem.save();
+    var record = new ResponseDB();
+    record.requestId = resp.requestId;
+    record.shopItemId = shopItem.id;
+    record.consultantId = resp.sender.id;
+    record.threadId = resp.threadId;
+    record.operatorId = "";
+    record.save();
+    getThreadById(record.threadId)
+    .then(function(response){
+      if (!response) return;
+      for (var i = 0; i<response.responses.length;i++){
+        if (response.responses[i].request != record.requestId) continue;
+        response.responses[i].responses.push(""+record.id);
+        response.save();
+        break;
+      }
+    });
+    var res = {};
+    res.id = record.id;
+    res.shopItem = getReadableShopItem(shopItem);
+    res.threadId = record.threadId;
+    res.requestId = record.requestId;
+    res.operatorId = record.operatorId;
+    res.sender = resp.sender;
+    res.sent = record.sentTime.getTime() / 1000 | 0;
 
+    return resolve(res);
+  });
+}
 function UpdateUserData(address,userData){
   return new Promise(function(resolve, reject) {
     UserDB.findOne({'address.user.id': address.user.id}).exec(function(err, item) {
@@ -374,6 +548,26 @@ function UpdateUserData(address,userData){
     });
   });
 }
+
+function CheckAuthUser(authorization){
+  return new Promise(function(resolve,reject){
+    if (authorization === null ||
+      authorization.basic === null ||
+      authorization.basic.username === null ||
+      authorization.basic.password === null) {
+      return resolve({'auth':false});
+    }
+    AuthUserDB.find({
+      'login': authorization.basic.username
+    }).limit(1).exec(function(err, items) {
+      if (items.length === 0) {
+        return resolve({'auth':false});
+      };
+      return resolve({'auth':true, 'AuthUserId': items[0].id, 'AuthUser': items[0]});
+    });
+  });
+}
+
 function GetUserData(msg){
   return new Promise(function(resolve, reject) {
     UserDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
@@ -385,24 +579,6 @@ function GetUserData(msg){
         return resolve(item.userData);
       }
       return resolve({});
-    });
-  });
-}
-
-function AddChanel(msg){
-  return new Promise(function(resolve,reject){
-    UserDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, item) {
-      if (err) return reject(err);
-      if (item != null) return resolve(item.id);
-      var record = new UserDB(msg);
-      if (msg.sourceEvent && msg.sourceEvent.message && msg.sourceEvent.message.from) {
-        record.username = msg.sourceEvent.message.from.first_name + ' ' +
-          msg.sourceEvent.message.from.last_name;
-      } else {
-        record.username = msg.address.user.name;
-      }
-      record.save();
-      return resolve(record.id);
     });
   });
 }
@@ -440,27 +616,6 @@ function GetShopById(id){
       return resolve('');
     });
   });
-}
-
-function saveMsgFromUser(msg,AI){
-  var record = new MessageDB({text: msg.text, attachments: msg.attachments, AI:AI});
-
-    AddChanel(msg)
-    .then(function(id){
-      record.sender = {'type':'user','id':id};
-      ThreadV2DB.findOne({'userId': id})
-      .exec(function(err,item){
-        if (err) return reject(err);
-        if (item) {
-          item.messages.push(record.id);
-          item.save();
-          record.threadId = item.id;
-          record.save();
-        };
-
-      });
-    });
-
 }
 
 function getThreads(){
@@ -513,18 +668,6 @@ function getMsgsByThread(id){
   });
 }
 
-function getReadableMsg(item){
-  var result = {}
-  result.id = item.id;
-  result.text = item.text;
-  result.attachments = item.attachments ;
-  result.threadId = item.threadId ;
-  result.AI = item.AI ;
-  result.sender = item.sender ;
-  result.sent = item.sentTime.getTime() / 1000 | 0;
-  return result;
-}
-
 function getRequestByThread(id){
   return new Promise(function(resolve,reject){
     RequestDB.find({'threadId':id}, function(err, items){
@@ -539,17 +682,7 @@ function getRequestByThread(id){
   });
 }
 
-function getReadableResp(item){
-  var result = {};
-  result.id = item.id;
-  result.requestId = item.requestId;
-  result.threadId = item.threadId;
-  result.consultantId = item.consultantId;
-  result.operatorId = item.operatorId;
-  result.shopItemId = item.shopItemId;
-  result.sent = item.sentTime.getTime() / 1000 | 0;
-  return result;
-}
+
 function getReqResByThread(id){
   return new Promise(function(resolve,reject){
     RequestDB.find({'threadId':id}, function(err, items){
@@ -581,29 +714,6 @@ function getReqResByThread(id){
   });
 }
 
-function getReadableReq(item)
-{
-  var result = {};
-  result.orderId = item.orderId;
-  result.threadId = item.threadId;
-  result.shopId = item.shopId;
-  result.operatorId = item.operatorId;
-  result.sent = item.sentTime.getTime() / 1000 | 0;
-  result.id = item.id;
-  return result;
-}
-
-function getReadableShop(item)
-{
-  var result = {};
-  result.id = item.id;
-  result.name = item.name;
-  result.addressId = item.addressId;
-  result.phone = item.phone;
-  result.comments = item.comments;
-  return result;
-}
-
 function getShops(){
   var resp = [];
   return new Promise(function(resolve,reject){
@@ -633,25 +743,11 @@ function getShops(){
         for (var j = 0; j<items.length; j++){
           shop.tags.push(items[j].tag);
         }
-        console.log(shop);
         //resp.push(shop);
         return resolve(shop);
       });
     });
   }
-}
-
-function getReadableAuthUser(item)
-{
-
-  var result = {};
-  result.id = item.id;
-  result.name = item.name;
-  result.login = item.login;
-  result.phone = item.phone;
-  result.group = item.group;
-  result.shopId = item.shopId;
-  return result;
 }
 
 function getOperators(){
@@ -665,21 +761,6 @@ function getOperators(){
       return resolve(result);
     });
   });
-}
-function getReadableUser(item)
-{
-  var result = {};
-  result.id = item.id;
-  result.username = item.username;
-  result.form = {};
-  if (!item.userData || !item.userData.profile) return result;
-  result.form.name = item.userData.profile.name;
-  result.form.sex = item.userData.profile.sex;
-  result.form.size = {'clothes':[],'shoes':[]};
-
-  result.form.size.clothes = choiceClothesSize.slice(item.userData.profile.choiceClothesSmall,item.userData.profile.choiceClothesLarge+1);
-  result.form.size.shoes = choiceShoesSize.slice(item.userData.profile.choiceShoesSmall,item.userData.profile.choiceShoesLarge+1);
-  return result;
 }
 
 function getUserByThreadId(id){
@@ -697,115 +778,6 @@ function getUserByThreadId(id){
   });
 }
 
-function saveMsgFromOperator(msg){
-  return new Promise(function(resolve,reject){
-    var record = new MessageDB(msg);
-    record.save();
-    getThreadById(msg.threadId)
-    .then(function(response){
-      if (!response) return;
-      response.messages.push(record.id);
-      response.save();
-    });
-    return resolve(record);
-  });
-}
-
-function saveOrder(order){
-  return new Promise(function(resolve,reject){
-    var record = new OrderDB(order);
-    record.save();
-    return resolve(record);
-  });
-}
-function saveRequestFromOperator(request){
-  return new Promise(function(resolve,reject){
-    var order = new OrderDB(request.order);
-    order.save();
-    var record = new RequestDB();
-    record.orderId = order.id;
-    record.threadId = request.threadId;
-    record.shopId = request.shops;
-    record.operatorId = request.sender.id;
-    record.save();
-    getThreadById(request.threadId)
-    .then(function(response){
-      if (!response) return;
-      response.responses.push({'request':record.id, 'responses':[]});
-      response.save();
-    });
-    var res = {};
-    res.id = record.id;
-    res.order = getReadableOrder(order);
-    res.threadId = record.threadId;
-    res.shops = record.shopId;
-    res.sender = {'type': 'operator', 'id': record.operatorId};
-    res.sent = record.sentTime.getTime() / 1000 | 0;
-    return resolve(res);
-  });
-}
-
-function getReadableOrder(item){
-  var result = {};
-  result.id = item.id;
-  result.item = item.item;
-  result.color = item.color;
-  result.size = item.size;
-  result.photo = item.photo;
-  result.comments = item.comments;
-  return result;
-}
-
-
-function saveResponseFromConsultant(resp){
-  return new Promise(function(resolve,reject){
-    var shopItem = new ShopItemDB(resp.shopItem);
-    shopItem.price = ""+resp.shopItem.price;
-    shopItem.save();
-    var record = new ResponseDB();
-    record.requestId = resp.requestId;
-    record.shopItemId = shopItem.id;
-    record.consultantId = resp.sender.id;
-    record.threadId = resp.threadId;
-    record.operatorId = "";
-    record.save();
-    getThreadById(record.threadId)
-    .then(function(response){
-      if (!response) return;
-      for (var i = 0; i<response.responses.length;i++){
-        if (response.responses[i].request != record.requestId) continue;
-        console.log(record.id);
-        response.responses[i].responses.push(""+record.id);
-        console.log(response.responses[i]);
-        response.save();
-        console.log(response.responses[i]);
-        break;
-      }
-    });
-    var res = {};
-    res.id = record.id;
-    res.shopItem = getReadableShopItem(shopItem);
-    res.threadId = record.threadId;
-    res.requestId = record.requestId;
-    res.operatorId = record.operatorId;
-    res.sender = resp.sender;
-    res.sent = record.sentTime.getTime() / 1000 | 0;
-
-    return resolve(res);
-  });
-}
-
-function getReadableShopItem(item){
-  var result = {};
-  result.id = item.id;
-  result.item = item.item;
-  result.color = item.color;
-  result.size = item.size;
-  result.price = item.price;
-  result.photo = item.photo;
-  result.comments = item.comments;
-  return result;
-}
 function getShopByConsultantId(id){
   return new Promise(function(resolve,reject){
     AuthUserDB.findById(id).exec(function(err,item){
@@ -850,16 +822,6 @@ function getOrderById(id){
   });
 }
 
-function getResponseByConsultant(id){
-  return new Promise(function(resolve,reject){
-    ResponseDB.find('consultantId' == id, function(err, items){
-      if (err) return reject(err);
-      if (!items.length) return resolve();
-      var result = getReadableResp(items);
-      return resolve(result);
-    });
-  });
-}
 function getResponseByConsultantId(id){
   return new Promise(function(resolve,reject){
     ResponseDB.find('consultantId' == id, function(err, items){
@@ -900,9 +862,7 @@ function getReqRespByConsultant(consult){
           addReadableOrder(i)
           .then(function(){
             count++;
-            console.log('count '+ count +' requests.length '+ requests.length);
             if (count==requests.length){
-              console.log('count '+ count +' requests.length '+ requests.length);
               return resolve(result);
             }
 
@@ -919,19 +879,16 @@ function getReqRespByConsultant(consult){
               result.push({'request':requests[tmpi],'responses':[]});
 
               var countj=0;
-              console.log('addReadableOrder'+tmpi);
               var flag = false;
               for (var j = 0 ; j<responses.length;j++){
                 if (requests[tmpi].id == responses[j].requestId){
                   flag = true;
-                  console.log('addReadableOrder HERERERE');
                   addReadableShopItem(j)
                   .then(function(resp1){
                     countj++;
                     result[tmpi].responses = resp1;
 
                     if(countj==responses.length){
-                      console.log('countj '+ countj +' responses.length '+ responses.length);
                       return resolve(result);
                     }
                   });
@@ -940,16 +897,12 @@ function getReqRespByConsultant(consult){
               }
               if (!flag)
                 return resolve();
-              console.log('addReadableOrder END'+tmpi);
 
               function addReadableShopItem(tmpj){
-                console.log('addReadableShopItem'+tmpj);
                 return new Promise(function(resolve,reject){
                   var resp = [];
-                  console.log("here1");
                   getShopItemId(responses[tmpj].shopItemId)
                   .then(function(shopItem){
-                    console.log("here2");
                     responses[tmpj].shopItem = shopItem;
                     delete responses[tmpj].shopItemId;
                     resp.push(responses[tmpj]);
@@ -966,16 +919,6 @@ function getReqRespByConsultant(consult){
     });
   });
 }
-function getOrderId(id){
-  return new Promise(function(resolve,reject){
-    OrderDB.findById( id, function(err, item){
-      if (err) return reject(err);
-      if (!item) return resolve();
-      var result = getReadableOrder(item);
-      return resolve(result);
-    });
-  });
-}
 
 function getShopItemId(id){
   return new Promise(function(resolve,reject){
@@ -987,6 +930,54 @@ function getShopItemId(id){
     });
   });
 }
+
+function getLastReqOrResByThreadId(threadId){
+  return new Promise(function(resolve,reject){
+    getLastReqByThreadId(threadId)
+    .then(function(req){
+      getLastResByThreadId(threadId)
+      .then(function(res){
+        if (!res || (req && req.sent>=res.sent)) {
+          return resolve(req);
+        }
+        return resolve(res);
+      });
+    });
+  });
+  function getLastReqByThreadId(threadId){
+    return new Promise(function(resolve,reject){
+      RequestDB.findOne({'threadId': threadId}).sort({"sentTime":-1}).exec(function(err,item){
+        if (err) return reject();
+        if (!item) return resolve();
+        var result = getReadableReq(item);
+        getOrderById(item.orderId)
+        .then(function(order){
+          result.order = order;
+          delete result.orderId;
+          result.type = 'request';
+          return resolve(result);
+        });
+      });
+    });
+  }
+  function getLastResByThreadId(threadId){
+    return new Promise(function(resolve,reject){
+      ResponseDB.findOne({'threadId':threadId}).sort({"sentTime":-1}).exec(function(err,item){
+        if (err) return reject();
+        if (!item) return resolve();
+        var result = getReadableResp(item);
+        getShopItemId(item.shopItemId)
+        .then(function(shopItem){
+          result.shopItem = shopItem;
+          delete result.shopItemId;
+          result.type = 'response';
+          return resolve(result);
+        });
+      });
+    });
+  }
+}
+
 exports.CreateShop = CreateShop;
 exports.CreateAddress = CreateAddress;
 exports.CreateConsultant = CreateConsultant;
@@ -1019,7 +1010,7 @@ exports.getResponseById = getResponseById;
 exports.getOrderById = getOrderById;
 exports.getReqRespByConsultant = getReqRespByConsultant;
 exports.getShopItemId = getShopItemId;
-exports.getOrderId = getOrderId;
+exports.getLastReqOrResByThreadId = getLastReqOrResByThreadId;
 /*exports.MsgDB = MsgDB;
 exports.ChanelDB = ChanelDB;
 exports.ProviderDB = ProviderDB;
