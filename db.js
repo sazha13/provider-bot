@@ -874,7 +874,11 @@ function getReqRespByConsultant(consult){
           .then(function(){
             console.log("getReqRespByConsultant5");
             count++;
+            console.log(count);
+            console.log(requests.length);
             if (count==requests.length){
+              console.log("return");
+              console.log(result);
               return resolve(result);
             }
 
