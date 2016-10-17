@@ -859,7 +859,10 @@ function getReqRespByConsultant(consult){
       .then(function(responses){
         var count = 0;
         if (requests.length == 0)
+        {
+          console.log("HERE");
           return resolve([]);
+        }
         for (var i = 0; i<requests.length; i++){
           addReadableOrder(i)
           .then(function(){
