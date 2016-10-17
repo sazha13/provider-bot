@@ -858,6 +858,8 @@ function getReqRespByConsultant(consult){
       getResponseByConsultantId(consult.id)
       .then(function(responses){
         var count = 0;
+        if (requests.length == 0)
+          return resolve([]);
         for (var i = 0; i<requests.length; i++){
           addReadableOrder(i)
           .then(function(){
