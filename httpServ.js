@@ -192,7 +192,7 @@ function postThreadMsgs(req, res, next) {
         resp.sent = response.sentTime.getTime() / 1000 | 0;
         resp.unseen = 0;
         res.send(resp);
-        db.getUserByThreadId(response.threadId)
+        db.getUserByThreadIdforSend(response.threadId)
         .then(function(user){
           bot.SendMsg(user.address,response.text,response.attachments);
         });
@@ -328,9 +328,10 @@ function postThreadResponse(req, res, next) {
         };
         response.unseen = 0;
         res.send(response);
-        db.getUserByThreadId(req.params.THREAD_ID)
+        db.getUserByThreadIdforSend(req.params.THREAD_ID)
         .then(function(user){
           if (!user) return;
+          console.log(user);
           db.getShopByConsultantId(response.sender.id)
           .then(function(shop){
             bot.SendResponse(user.address, response, shop);

@@ -778,6 +778,19 @@ function getUserByThreadId(id){
   });
 }
 
+function getUserByThreadIdforSend(id){
+  return new Promise(function(resolve,reject){
+    ThreadV2DB.findById(id).exec(function(err,item){
+      if (err) return reject(err);
+      if (!item) return resolve({});
+      UserDB.findById(item.userId).exec(function(err,item){
+        if (err) return reject(err);
+        return resolve(item);
+      });
+    });
+  });
+}
+
 function getShopByConsultantId(id){
   return new Promise(function(resolve,reject){
     AuthUserDB.findById(id).exec(function(err,item){
@@ -1007,6 +1020,7 @@ exports.getMsgsByThread = getMsgsByThread;
 exports.getShops = getShops;
 exports.getOperators = getOperators;
 exports.getUserByThreadId = getUserByThreadId;
+exports.getUserByThreadIdforSend = getUserByThreadIdforSend;
 exports.saveMsgFromOperator = saveMsgFromOperator;
 exports.saveRequestFromOperator = saveRequestFromOperator;
 exports.saveResponseFromConsultant = saveResponseFromConsultant;

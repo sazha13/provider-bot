@@ -173,21 +173,46 @@ function SendMsg(address, text, attachments){
 function SendResponse(address, resp, shop){
   console.log('SendResponse');
   console.log(address);
-
+  var receipt = new builder.ReceiptCard();
+  receipt.title = "shop.name"
+  var receiptItem = new builder.ReceiptItem();
+  console.log(receiptItem);
+  receiptItem.price(resp.shopItem.price);
+  receiptItem.title(resp.shopItem.item);
+  receiptItem.subtitle(resp.shopItem.size);
+  receiptItem.text(resp.shopItem.color);
+  items = [receiptItem];
+  for (var i = 0; i<resp.shopItem.photo.length; i++)
+  {
+    var photo = new builder.CardImage();
+    photo.url(resp.shopItem.photo[i].contentUrl)
+    var item = new builder.ReceiptItem();
+    item.image(photo.toImage());
+    items.push(item);
+  }
+  console.log(items);
+  receipt.items(items);
   var reply = new builder.Message();
   var textmsg = "Магазин: " + shop.name + "\n\n";
   textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
   textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
   textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
   textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
-  console.log(textmsg);
+  // console.log(textmsg);
   reply.text(textmsg);
-  console.log(resp.shopItem.photo);
+  // console.log(resp.shopItem.photo);
   reply.attachments(resp.shopItem.photo);
   reply.address(address);
-  console.log('SendResponse');
-  bot.send(reply,function(err){
-  });
+  // console.log('SendResponse');
+  // console.log(reply);
+  // bot.send(reply,function(err){ });
+  var receiptMsg = new builder.Message();
+  receiptMsg.text("bla");
+  receiptMsg.addAttachment(receipt.toAttachment());
+  receiptMsg.address(address);
+  // console.log([receipt.toAttachment()]);
+  console.log(receiptMsg);
+  bot.send(receiptMsg,function(err){console.log(err);});
 }
 
 exports.connector = connector;
