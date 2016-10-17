@@ -861,15 +861,18 @@ function getReqRespByConsultant(consult){
       .then(function(responses){
         console.log("getReqRespByConsultant2");
         var count = 0;
-        console.log("requests");
+        console.log(requests);
         if (requests.length == 0)
         {
           console.log("HERE");
           return resolve([]);
         }
+        console.log("getReqRespByConsultant3");
         for (var i = 0; i<requests.length; i++){
+          console.log("getReqRespByConsultant4");
           addReadableOrder(i)
           .then(function(){
+            console.log("getReqRespByConsultant5");
             count++;
             if (count==requests.length){
               return resolve(result);
