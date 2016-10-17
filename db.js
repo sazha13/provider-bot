@@ -855,14 +855,15 @@ function getReqRespByConsultant(consult){
     var result = [];
     getRequestByShopId(consult.shopId)
     .then(function(requests){
+      if (requests.length == 0){
+        return resolve([]);
+      }
       getResponseByConsultantId(consult.id)
       .then(function(responses){
         var count = 0;
-        if (requests.length == 0)
-        {
-          return resolve([]);
-        }
+
         for (var i = 0; i<requests.length; i++){
+
           addReadableOrder(i)
           .then(function(){
             count++;
@@ -888,7 +889,8 @@ function getReqRespByConsultant(consult){
                   addReadableShopItem(j)
                   .then(function(resp1){
                     countj++;
-                    result[tmpi].responses = resp1;
+                    if (resp1.length)
+                      result[tmpi].responses.push(resp1[0]);
                     if(countj==responses.length){
                       return resolve(result);
                     }
@@ -906,7 +908,7 @@ function getReqRespByConsultant(consult){
 
                 return new Promise(function(resolve,reject){
                   var resp = [];
-                  return resolve(resp);
+                  // return resolve(resp);
                   getShopItemId(responses[tmpj].shopItemId)
                   .then(function(shopItem){
                     responses[tmpj].shopItem = shopItem;
