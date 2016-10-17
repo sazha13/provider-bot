@@ -853,47 +853,33 @@ function getRequestByShopId(id){
 function getReqRespByConsultant(consult){
   return new Promise(function(resolve,reject){
     var result = [];
-    console.log("getReqRespByConsultant");
     getRequestByShopId(consult.shopId)
     .then(function(requests){
-      console.log("getReqRespByConsultant1");
       getResponseByConsultantId(consult.id)
       .then(function(responses){
-        console.log("getReqRespByConsultant2");
         var count = 0;
-        console.log(requests);
         if (requests.length == 0)
         {
-          console.log("HERE");
           return resolve([]);
         }
-        console.log("getReqRespByConsultant3");
         for (var i = 0; i<requests.length; i++){
-          console.log("getReqRespByConsultant4");
           addReadableOrder(i)
           .then(function(){
-            console.log("getReqRespByConsultant5");
             count++;
-            console.log(count);
-            console.log(requests.length);
             if (count==requests.length){
-              console.log("return");
-              console.log(result);
               return resolve(result);
             }
 
           })
         }
         function addReadableOrder(tmpi){
-
           return new Promise(function(resolve,reject){
             getOrderById(requests[tmpi].orderId)
             .then(function(order){
-
               requests[tmpi].order = order;
               delete requests[tmpi].orderId;
               result.push({'request':requests[tmpi],'responses':[]});
-
+              // console.log(result);
               var countj=0;
               var flag = false;
               for (var j = 0 ; j<responses.length;j++){
@@ -903,20 +889,24 @@ function getReqRespByConsultant(consult){
                   .then(function(resp1){
                     countj++;
                     result[tmpi].responses = resp1;
-
                     if(countj==responses.length){
                       return resolve(result);
                     }
-                  });
+                  })
 
                 }
+                else
+                {countj++;}
               }
-              if (!flag)
+              if (!flag){
                 return resolve();
+              }
 
               function addReadableShopItem(tmpj){
+
                 return new Promise(function(resolve,reject){
                   var resp = [];
+                  return resolve(resp);
                   getShopItemId(responses[tmpj].shopItemId)
                   .then(function(shopItem){
                     responses[tmpj].shopItem = shopItem;
