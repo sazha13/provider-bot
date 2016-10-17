@@ -853,11 +853,15 @@ function getRequestByShopId(id){
 function getReqRespByConsultant(consult){
   return new Promise(function(resolve,reject){
     var result = [];
+    console.log("getReqRespByConsultant");
     getRequestByShopId(consult.shopId)
     .then(function(requests){
+      console.log("getReqRespByConsultant1");
       getResponseByConsultantId(consult.id)
       .then(function(responses){
+        console.log("getReqRespByConsultant2");
         var count = 0;
+        console.log("requests");
         if (requests.length == 0)
         {
           console.log("HERE");
