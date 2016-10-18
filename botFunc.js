@@ -24,56 +24,57 @@ intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
   function (session){
-    var receipt = new builder.ReceiptCard(session)
-      .title("shop.name");
-    var receiptItem = new builder.ReceiptItem(session)
-      .price("resp.shopItem.price")
-      .title("resp.shopItem.item")
-      .subtitle("resp.shopItem.size")
-      .text("resp.shopItem.color")
-      .image(builder.CardImage.create(session,"https://s3-eu-west-1.amazonaws.com/bundlesmqd123/upload/example.jpg"));
-    var items = [receiptItem.toItem()];
-    // for (var i = 0; i<resp.shopItem.photo.length; i++)
-    // {
-    //   var photo = new builder.CardImage();
-    //   photo.url(resp.shopItem.photo[i].contentUrl)
-    //   console.log(photo);
-    //   var item = new builder.ReceiptItem()
-    //     .price(resp.shopItem.price)
-    //     .title(resp.shopItem.item)
-    //     .subtitle(resp.shopItem.size)
-    //     .text(resp.shopItem.color)
-    //     .image([photo.toImage()]);
-    //   items.push(item.toItem());
-    //   console.log(item);
-    //   console.log(items);
-    // }
-    receipt.buttons([]);
-    receipt.facts([]);
-    // receipt.tax("tax");
-    // receipt.total("total");
-    // receipt.vat("vat");
-    receipt.items(items);
-    console.log(receipt);
-    // var reply = new builder.Message();
-    // var textmsg = "Магазин: " + shop.name + "\n\n";
-    // textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
-    // textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
-    // textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
-    // textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
-    // // console.log(textmsg);
-    // reply.text(textmsg);
-    // console.log(resp.shopItem.photo);
-    // reply.addAttachment(resp.shopItem.photo[0]);
-    // reply.address(address);
-    // console.log('SendResponse');
-    // console.log(reply);
-    // bot.send(reply,function(err){ });
-    // return;
-    var receiptMsg = new builder.Message(session)
-      .attachments([receipt.toAttachment()])
-      .text("");
-    session.send(receiptMsg);
+    // var receipt = new builder.ReceiptCard(session)
+    //   .title("shop.name");
+    // var receiptItem = new builder.ReceiptItem(session)
+    //   .price("resp.shopItem.price")
+    //   .title("resp.shopItem.item")
+    //   .subtitle("resp.shopItem.size")
+    //   .text("resp.shopItem.color")
+    //   .image(builder.CardImage.create(session,"https://s3-eu-west-1.amazonaws.com/bundlesmqd123/upload/example.jpg"));
+    // var items = [receiptItem.toItem()];
+    // // for (var i = 0; i<resp.shopItem.photo.length; i++)
+    // // {
+    // //   var photo = new builder.CardImage();
+    // //   photo.url(resp.shopItem.photo[i].contentUrl)
+    // //   console.log(photo);
+    // //   var item = new builder.ReceiptItem()
+    // //     .price(resp.shopItem.price)
+    // //     .title(resp.shopItem.item)
+    // //     .subtitle(resp.shopItem.size)
+    // //     .text(resp.shopItem.color)
+    // //     .image([photo.toImage()]);
+    // //   items.push(item.toItem());
+    // //   console.log(item);
+    // //   console.log(items);
+    // // }
+    // receipt.buttons([]);
+    // receipt.facts([]);
+    // // receipt.tax("tax");
+    // // receipt.total("total");
+    // // receipt.vat("vat");
+    // receipt.items(items);
+    // console.log(receipt);
+    var reply = new builder.Message(session);
+    var textmsg = "Магазин: " + shop.name + "\n\n";
+    textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
+    textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
+    textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
+    textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
+    // console.log(textmsg);
+    reply.text(textmsg);
+    console.log(resp.shopItem.photo);
+    reply.addAttachment({"contentUrl": "http://docs.botframework.com/images/demo_bot_image.png",
+                            "contentType": "image/jpeg"  });
+
+    console.log('SendResponse');
+    console.log(reply);
+    session.send(reply);
+    return;
+    // var receiptMsg = new builder.Message(session)
+    //   .attachments([receipt.toAttachment()])
+    //   .text("");
+    // session.send(receiptMsg);
   },
   function(session, args, next){
     console.log("session");
