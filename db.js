@@ -430,6 +430,25 @@ function saveMsgFromUser(msg,AI){
           item.save();
           record.threadId = item.id;
           record.save();
+          if (AI.shops.length)
+          {
+            getUserById(id)
+            .then(function(resp){
+              var request = {};
+              request.threadId = item.id;
+              request.shops = AI.shops;
+              request.sender = record.sender;
+              var user = getReadableUser(resp);
+              request.order = {item: msg.text,
+                  color: "",
+                  size: user.form.size.clothes,
+                  photo: record.attachments,
+                  comments: ""
+                };
+              saveRequestFromOperator(request);
+            });
+
+          };
         };
 
       });

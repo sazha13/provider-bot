@@ -221,10 +221,17 @@ function SendResponse(address, resp, shop){
   textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
   // console.log(textmsg);
   reply.text(textmsg);
-  console.log(resp.shopItem.photo[0]);
-  reply.addAttachment(resp.shopItem.photo[0]);
+  var attach =[];
+  for (var i = 0; i<resp.shopItem.photo.length;i++){
+    var tmp = {};
+    tmp.contentUrl = resp.shopItem.photo[i].contentUrl;
+    tmp.contentType = resp.shopItem.photo[i].contentType;
+    if (tmp.contentUrl && tmp.contentType)
+      attach.push(tmp);
+  }
+
+  reply.attachments(attach);
   reply.address(address);
-  console.log('SendResponse');
   // console.log(" " +reply.toMessage().attachments);
   bot.send(reply,function(err){ });
   return;
