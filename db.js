@@ -163,6 +163,9 @@ var SchemaThreadV2 = new mongoose.Schema({
               responses:[]}],
   messages: []
 });
+var SchemaUnderConstruction = new mongoose.Schema({
+  messagesOff: String
+});
 
 
 /*var MsgDB = mongoose.model('MsgSchema', SchemaMsg);
@@ -183,7 +186,37 @@ var AuthUserDB = mongoose.model('AuthUser',SchemaAuthUser);
 var MessageDB = mongoose.model('Message',SchemaMessage);
 var UserDB = mongoose.model('User',SchemaUser);
 var ThreadV2DB = mongoose.model('ThreadV2',SchemaThreadV2);
+var UnderConstructionDB = mongoose.model('UnderConstruction',SchemaUnderConstruction);
 
+function isUnderConstruction()
+{
+  return new Promise(function(resolve,reject){
+    UnderConstructionDB.findOne().exec(function(err,item){
+      if (item && item.messagesOff)
+        return resolve(true);
+      return resolve(false);
+    });
+  });
+}
+function SetUnderConstruction(flag)
+{
+  return new Promise(function(resolve,reject){
+    UnderConstructionDB.findOne().exec(function(err,item){
+      if (!item){
+        item = new UnderConstructionDB();
+      }
+      if (flag){
+        item.messagesOff = "off";
+      }else{
+        item.messagesOff = "";
+      }
+      item.save();
+      return resolve();
+    });
+  });
+}
+exports.isUnderConstruction = isUnderConstruction;
+exports.SetUnderConstruction = SetUnderConstruction;
 function getReadableResp(item){
   var result = {};
   result.id = item.id;

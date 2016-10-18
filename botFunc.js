@@ -72,31 +72,53 @@ bot.dialog('/',[
   //
   // }
   function(session){
-    var size= ["S","M"];
-    var sizestr = "S и M?";
-    console.log("Привет".toLowerCase());
-    if(session.message.text.toLowerCase().indexOf('привет') + 1) {
-      session.send("Привет!");
-    }
-    if(session.message.text.toLowerCase().indexOf('пальто') + 1) {
-      session.send("Какой размер вам подобрать? "+sizestr);
-      needItem = "пальто";
-      session.endDialog();
-    }
-    if(session.message.text.toLowerCase().indexOf('рубашк') + 1) {
-      session.send("Какой размер вам подобрать? "+sizestr);
-      needItem = "рубашка";
-      session.endDialog();
-    }
-    if(session.message.text.toLowerCase().indexOf('пончо') + 1) {
-      session.send("К сожелению сейчас у нас нету пончо, может быть, Вам подобрать пальто?");
-      session.endDialog();
-    }
-    if(session.message.text.toLowerCase().indexOf('размер') + 1) {
-      session.send("Понял! Напишу как будут результаты :)");
-      db.saveGoodRequest(needItem,size,session.message);
-      session.endDialog();
-    }
+    session.send();
+    db.isUnderConstruction()
+    .then(function(response){
+
+      if (response) {
+        if(session.message.text.toLowerCase().indexOf('service on') + 1) {
+          db.SetUnderConstruction(false);
+          session.send("Сервис включен");
+          session.endDialog();
+          return;
+        }
+        session.send("Извините, сервис на стадии разработки");
+      }
+      else {
+        var size= ["S","M"];
+        var sizestr = "S и M?";
+        console.log("Привет".toLowerCase());
+        if(session.message.text.toLowerCase().indexOf('привет') + 1) {
+          session.send("Привет!");
+        }
+        if(session.message.text.toLowerCase().indexOf('пальто') + 1) {
+          session.send("Какой размер вам подобрать? "+sizestr);
+          needItem = "пальто";
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('рубашк') + 1) {
+          session.send("Какой размер вам подобрать? "+sizestr);
+          needItem = "рубашка";
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('пончо') + 1) {
+          session.send("К сожалению сейчас у нас нету пончо, может быть, Вам подобрать пальто?");
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('размер') + 1) {
+          session.send("Понял! Напишу как будут результаты :)");
+          db.saveGoodRequest(needItem,size,session.message);
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('service off') + 1) {
+          db.SetUnderConstruction(true);
+          session.send("Сервис выключен");
+          session.endDialog();
+        }
+      }
+    });
+
 
   }
 ]);
