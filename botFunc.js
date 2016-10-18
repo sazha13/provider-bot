@@ -23,85 +23,7 @@ onBoard.registerDialogs(bot);
 intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
-  function (session){
-    // var receipt = new builder.ReceiptCard(session)
-    //   .title("shop.name");
-    // var receiptItem = new builder.ReceiptItem(session)
-    //   .price("resp.shopItem.price")
-    //   .title("resp.shopItem.item")
-    //   .subtitle("resp.shopItem.size")
-    //   .text("resp.shopItem.color")
-    //   .image(builder.CardImage.create(session,"https://s3-eu-west-1.amazonaws.com/bundlesmqd123/upload/example.jpg"));
-    // var items = [receiptItem.toItem()];
-    // // for (var i = 0; i<resp.shopItem.photo.length; i++)
-    // // {
-    // //   var photo = new builder.CardImage();
-    // //   photo.url(resp.shopItem.photo[i].contentUrl)
-    // //   console.log(photo);
-    // //   var item = new builder.ReceiptItem()
-    // //     .price(resp.shopItem.price)
-    // //     .title(resp.shopItem.item)
-    // //     .subtitle(resp.shopItem.size)
-    // //     .text(resp.shopItem.color)
-    // //     .image([photo.toImage()]);
-    // //   items.push(item.toItem());
-    // //   console.log(item);
-    // //   console.log(items);
-    // // }
-    // receipt.buttons([]);
-    // receipt.facts([]);
-    // // receipt.tax("tax");
-    // // receipt.total("total");
-    // // receipt.vat("vat");
-    // receipt.items(items);
-    // console.log(receipt);
-    var reply = new builder.Message();
-    var textmsg = "Магазин: " + "shop.name" + "\n\n";
-    textmsg += "Вещь: "+ "resp.shopItem.item" + "\n\n";
-    textmsg += "Размер: "+ "resp.shopItem.size" + "\n\n";
-    textmsg += "Цвет: "+ "resp.shopItem.color" + "\n\n";
-    textmsg += "Цена: "+ "resp.shopItem.price" + "\n\n";
-    // console.log(textmsg);
-    reply.text(textmsg);
-    // console.log(resp.shopItem.photo);
-    reply.addAttachment({"contentUrl": "https://s3-eu-west-1.amazonaws.com/bundlesmqd123/upload/example.jpg",
-                            "contentType": "image/jpeg"  });
 
-    console.log('SendResponse');
-    console.log(reply);
-    reply.address({
-        "channelId": "telegram",
-        "user": {
-            "id": "203119213",
-            "name": "sazha",
-            "_id": {
-                "$oid": "57d946c67b1a710010e69d9a"
-            }
-        },
-        "conversation": {
-            "isGroup": false,
-            "id": "203119213",
-            "_id": {
-                "$oid": "57d946c67b1a710010e69d99"
-            }
-        },
-        "bot": {
-            "id": "square_bot",
-            "name": "providerbothandle",
-            "_id": {
-                "$oid": "57d946c67b1a710010e69d98"
-            }
-        },
-        "serviceUrl": "https://telegram.botframework.com",
-        "useAuth": true
-    });
-    bot.send(reply);
-    return;
-    // var receiptMsg = new builder.Message(session)
-    //   .attachments([receipt.toAttachment()])
-    //   .text("");
-    // session.send(receiptMsg);
-  },
   function(session, args, next){
     console.log("session");
     console.log(session);
@@ -250,65 +172,74 @@ function SendMsg(address, text, attachments){
   });
 }
 function SendResponse(address, resp, shop){
-  console.log('SendResponse');
-  var receipt = new builder.ReceiptCard()
-    .title(shop.name);
-  var receiptItem = new builder.ReceiptItem()
-    .price(resp.shopItem.price)
-    .title(resp.shopItem.item)
-    .subtitle(resp.shopItem.size)
-    .text(resp.shopItem.color)
-    .image(builder.CardImage.create(null,resp.shopItem.photo[0].contentUrl));
-  var items = [receiptItem.toItem()];
-  // for (var i = 0; i<resp.shopItem.photo.length; i++)
-  // {
-  //   var photo = new builder.CardImage();
-  //   photo.url(resp.shopItem.photo[i].contentUrl)
-  //   console.log(photo);
-  //   var item = new builder.ReceiptItem()
-  //     .price(resp.shopItem.price)
-  //     .title(resp.shopItem.item)
-  //     .subtitle(resp.shopItem.size)
-  //     .text(resp.shopItem.color)
-  //     .image([photo.toImage()]);
-  //   items.push(item.toItem());
-  //   console.log(item);
-  //   console.log(items);
-  // }
-  receipt.buttons([]);
-  receipt.facts([]);
-  // receipt.tax("tax");
-  // receipt.total("total");
-  // receipt.vat("vat");
-  receipt.items(items);
-  console.log(receipt);
-  // var reply = new builder.Message();
-  // var textmsg = "Магазин: " + shop.name + "\n\n";
-  // textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
-  // textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
-  // textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
-  // textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
-  // // console.log(textmsg);
-  // reply.text(textmsg);
-  // console.log(resp.shopItem.photo);
-  // reply.addAttachment(resp.shopItem.photo[0]);
-  // reply.address(address);
   // console.log('SendResponse');
-  // console.log(reply);
-  // bot.send(reply,function(err){ });
-  // return;
-  var receiptMsg = new builder.Message()
-    .attachments([receipt.toAttachment()])
-    .address(address)
-    .text("");
-  // receiptMsg.text("");
-  // receiptMsg.addAttachment(receipt.toAttachment());
-
-  // receiptMsg.address(address);
-  console.log(receipt.toAttachment());
-  console.log("HERE");
-  console.log(receiptMsg);
-  bot.send(receiptMsg,function(err){console.log(err);});
+  // var receipt = new builder.ReceiptCard()
+  //   .title("shop.name");
+  //   var image = new builder.CardImage()
+  //     .url(resp.shopItem.photo[0].contentUrl)
+  //     .alt("here")
+  //     .tap();
+  // var receiptItem = new builder.ReceiptItem()
+  //   .price("resp.shopItem.price")
+  //   .title("resp.shopItem.item")
+  //   .image(image.toImage());
+  //   // .subtitle("resp.shopItem.size")
+  //   // .text("resp.shopItem.color")
+  //
+  //   // .image(builder.CardImage.create(null,resp.shopItem.photo[0].contentUrl).toImage());
+  // var items = [receiptItem.toItem()];
+  // // for (var i = 0; i<resp.shopItem.photo.length; i++)
+  // // {
+  // //   var photo = new builder.CardImage();
+  // //   photo.url(resp.shopItem.photo[i].contentUrl)
+  // //   console.log(photo);
+  // //   var item = new builder.ReceiptItem()
+  // //     .price(resp.shopItem.price)
+  // //     .title(resp.shopItem.item)
+  // //     .subtitle(resp.shopItem.size)
+  // //     .text(resp.shopItem.color)
+  // //     .image([photo.toImage()]);
+  // //   items.push(item.toItem());
+  // //   console.log(item);
+  // //   console.log(items);
+  // // }
+  // receipt.buttons([]);
+  // receipt.facts([]);
+  // // receipt.tax("tax");
+  // // receipt.total("total");
+  // // receipt.vat("vat");
+  // // receipt.items(items);
+  // receipt.items([receiptItem.toItem()]);
+  // console.log("superhere");
+  // var tmp = receipt.toAttachment();
+  // console.log(tmp.content.items[0]);
+  var reply = new builder.Message();
+  var textmsg = "Магазин: " + shop.name + "\n\n";
+  textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
+  textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
+  textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
+  textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
+  // console.log(textmsg);
+  reply.text(textmsg);
+  console.log(resp.shopItem.photo[0]);
+  reply.addAttachment(resp.shopItem.photo[0]);
+  reply.address(address);
+  console.log('SendResponse');
+  // console.log(" " +reply.toMessage().attachments);
+  bot.send(reply,function(err){ });
+  return;
+  // var receiptMsg = new builder.Message()
+  //   .addAttachment(receipt.toAttachment())
+  //   .address(address)
+  //   .text("");
+  // // receiptMsg.text("");
+  // // receiptMsg.addAttachment(receipt.toAttachment());
+  //
+  // // receiptMsg.address(address);
+  // console.log(receipt.toAttachment());
+  // console.log("HERE");
+  // console.log(receiptMsg);
+  // bot.send(receiptMsg,function(err){console.log(err);});
 }
 
 exports.connector = connector;
