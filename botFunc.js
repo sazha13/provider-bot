@@ -55,7 +55,7 @@ bot.dialog('/',[
     // // receipt.vat("vat");
     // receipt.items(items);
     // console.log(receipt);
-    var reply = new builder.Message(session);
+    var reply = new builder.Message();
     var textmsg = "Магазин: " + "shop.name" + "\n\n";
     textmsg += "Вещь: "+ "resp.shopItem.item" + "\n\n";
     textmsg += "Размер: "+ "resp.shopItem.size" + "\n\n";
@@ -69,7 +69,33 @@ bot.dialog('/',[
 
     console.log('SendResponse');
     console.log(reply);
-    session.send(reply);
+    reply.address({
+        "channelId": "telegram",
+        "user": {
+            "id": "203119213",
+            "name": "sazha",
+            "_id": {
+                "$oid": "57d946c67b1a710010e69d9a"
+            }
+        },
+        "conversation": {
+            "isGroup": false,
+            "id": "203119213",
+            "_id": {
+                "$oid": "57d946c67b1a710010e69d99"
+            }
+        },
+        "bot": {
+            "id": "square_bot",
+            "name": "providerbothandle",
+            "_id": {
+                "$oid": "57d946c67b1a710010e69d98"
+            }
+        },
+        "serviceUrl": "https://telegram.botframework.com",
+        "useAuth": true
+    });
+    bot.send(reply);
     return;
     // var receiptMsg = new builder.Message(session)
     //   .attachments([receipt.toAttachment()])
