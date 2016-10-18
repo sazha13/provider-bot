@@ -64,7 +64,7 @@ bot.dialog('/',[
     // console.log(textmsg);
     reply.text(textmsg);
     // console.log(resp.shopItem.photo);
-    reply.addAttachment({"contentUrl": "http://docs.botframework.com/images/demo_bot_image.png",
+    reply.addAttachment({"contentUrl": "https://s3-eu-west-1.amazonaws.com/bundlesmqd123/upload/example.jpg",
                             "contentType": "image/jpeg"  });
 
     console.log('SendResponse');
