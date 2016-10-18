@@ -70,11 +70,51 @@ bot.dialog('/',[
     db.saveMsgFromUser(session.message,results);
 
   }]);
+  function blabla(session) {
+    var msg = new builder.Message(session)
+        .attachments([
+            new builder.ReceiptCard(session)
+                .title("Recipient's Name")
+                .items([
+                    builder.ReceiptItem.create(session, "$22.00", "EMP Museum").image(builder.CardImage.create(session, "https://upload.wikimedia.org/wikipedia/commons/a/a0/Night_Exterior_EMP.jpg")),
+                    builder.ReceiptItem.create(session, "$22.00", "Space Needle").image(builder.CardImage.create(session, "https://upload.wikimedia.org/wikipedia/commons/7/7c/Seattlenighttimequeenanne.jpg"))
+                ])
+                .facts([
+                    builder.Fact.create(session, "1234567898", "Order Number"),
+                    builder.Fact.create(session, "VISA 4076", "Payment Method"),
+                    builder.Fact.create(session, "WILLCALL", "Delivery Method")
+                ])
+                .tax("$4.40")
+                .total("$48.40")
+        ]);
+    session.send(msg);
 
+    // Send a receipt without images
+    msg = new builder.Message(session)
+        .attachments([
+            new builder.ReceiptCard(session)
+                .title("Recipient's Name")
+                .items([
+                    builder.ReceiptItem.create(session, "$22.00", "EMP Museum"),
+                    builder.ReceiptItem.create(session, "$22.00", "Space Needle")
+                ])
+                .facts([
+                    builder.Fact.create(session, "1234567898", "Order Number"),
+                    builder.Fact.create(session, "VISA 4076", "Payment Method"),
+                    builder.Fact.create(session, "WILLCALL", "Delivery Method")
+                ])
+                .tax("$4.40")
+                .total("$48.40")
+        ]);
+        session.send(msg);
+  }
   function botDialog(session) {
     console.log("botDialog");
     // console.log(session);
+    blabla(session);
+    return;
     session.send();
+
     session.beginDialog('/LUISintent');
 
     var recvedMsg = session.message;
@@ -174,7 +214,7 @@ function SendResponse(address, resp, shop){
   console.log('SendResponse');
   // console.log(address);
   var receipt = new builder.ReceiptCard();
-  // receipt.title(shop.name);
+  receipt.title(shop.name);
   var receiptItem = new builder.ReceiptItem();
   console.log(receiptItem);
   receiptItem.price(resp.shopItem.price);
@@ -186,9 +226,16 @@ function SendResponse(address, resp, shop){
   {
     var photo = new builder.CardImage();
     photo.url(resp.shopItem.photo[i].contentUrl)
+    console.log(photo);
     var item = new builder.ReceiptItem();
+    item.price(resp.shopItem.price);
+    item.title(resp.shopItem.item);
+    item.subtitle(resp.shopItem.size);
+    item.text(resp.shopItem.color);
     item.image(photo.toImage());
     items.push(item.toItem());
+    console.log(item);
+    console.log(items);
   }
   receipt.buttons([]);
   receipt.facts([]);
@@ -214,6 +261,7 @@ function SendResponse(address, resp, shop){
   var receiptMsg = new builder.Message();
   receiptMsg.text("");
   receiptMsg.addAttachment(receipt.toAttachment());
+
   receiptMsg.address(address);
   console.log(receipt.toAttachment());
   console.log("HERE");
