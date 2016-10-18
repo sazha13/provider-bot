@@ -23,19 +23,6 @@ onBoard.registerDialogs(bot);
 intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
-  function (session) {
-        // Send a greeting and show help.
-        var card = new builder.HeroCard(session)
-            .title("Microsoft Bot Framework")
-            .text("Your bots - wherever your users are talking.")
-            .images([
-                 builder.CardImage.create(session, "http://docs.botframework.com/images/demo_bot_image.png")
-            ]);
-        var msg = new builder.Message(session).attachments([card]);
-        session.send(msg);
-        session.send("Hi... I'm the Microsoft Bot Framework demo bot for Facebook. I can show you everything you can use our Bot Builder SDK to do on Facebook.");
-        session.beginDialog('/help');
-    },
   function(session, args, next){
     console.log("session");
     console.log(session);
@@ -185,53 +172,52 @@ function SendMsg(address, text, attachments){
 }
 function SendResponse(address, resp, shop){
   console.log('SendResponse');
-  // console.log(address);
-  // var receipt = new builder.ReceiptCard();
-  // receipt.title(shop.name);
-  // var receiptItem = new builder.ReceiptItem();
-  // console.log(receiptItem);
-  // receiptItem.price(resp.shopItem.price);
-  // receiptItem.title(resp.shopItem.item);
-  // receiptItem.subtitle(resp.shopItem.size);
-  // receiptItem.text(resp.shopItem.color);
-  // var items = [receiptItem.toItem()];
+  var receipt = new builder.ReceiptCard()
+    .title(shop.name);
+  var receiptItem = new builder.ReceiptItem()
+    .price(resp.shopItem.price)
+    .title(resp.shopItem.item)
+    .subtitle(resp.shopItem.size)
+    .text(resp.shopItem.color)
+    .image(builder.CardImage.create(null,resp.shopItem.photo[0].contentUrl))
+  var items = [receiptItem.toItem()];
   // for (var i = 0; i<resp.shopItem.photo.length; i++)
   // {
   //   var photo = new builder.CardImage();
   //   photo.url(resp.shopItem.photo[i].contentUrl)
   //   console.log(photo);
-  //   var item = new builder.ReceiptItem();
-  //   item.price(resp.shopItem.price);
-  //   item.title(resp.shopItem.item);
-  //   item.subtitle(resp.shopItem.size);
-  //   item.text(resp.shopItem.color);
-  //   item.image(photo.toImage());
+  //   var item = new builder.ReceiptItem()
+  //     .price(resp.shopItem.price)
+  //     .title(resp.shopItem.item)
+  //     .subtitle(resp.shopItem.size)
+  //     .text(resp.shopItem.color)
+  //     .image([photo.toImage()]);
   //   items.push(item.toItem());
   //   console.log(item);
   //   console.log(items);
   // }
-  // receipt.buttons([]);
-  // receipt.facts([]);
-  // // receipt.tax("tax");
-  // // receipt.total("total");
-  // // receipt.vat("vat");
-  // receipt.items(items);
-  // console.log(receipt);
-  var reply = new builder.Message();
-  var textmsg = "Магазин: " + shop.name + "\n\n";
-  textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
-  textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
-  textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
-  textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
-  // console.log(textmsg);
-  reply.text(textmsg);
-  console.log(resp.shopItem.photo);
-  reply.addAttachment(resp.shopItem.photo[0]);
-  reply.address(address);
-  console.log('SendResponse');
-  console.log(reply);
-  bot.send(reply,function(err){ });
-  return;
+  receipt.buttons([]);
+  receipt.facts([]);
+  // receipt.tax("tax");
+  // receipt.total("total");
+  // receipt.vat("vat");
+  receipt.items(items);
+  console.log(receipt);
+  // var reply = new builder.Message();
+  // var textmsg = "Магазин: " + shop.name + "\n\n";
+  // textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
+  // textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
+  // textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
+  // textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
+  // // console.log(textmsg);
+  // reply.text(textmsg);
+  // console.log(resp.shopItem.photo);
+  // reply.addAttachment(resp.shopItem.photo[0]);
+  // reply.address(address);
+  // console.log('SendResponse');
+  // console.log(reply);
+  // bot.send(reply,function(err){ });
+  // return;
   var receiptMsg = new builder.Message();
   receiptMsg.text("");
   receiptMsg.addAttachment(receipt.toAttachment());
