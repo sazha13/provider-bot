@@ -23,6 +23,19 @@ onBoard.registerDialogs(bot);
 intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
+  function (session) {
+        // Send a greeting and show help.
+        var card = new builder.HeroCard(session)
+            .title("Microsoft Bot Framework")
+            .text("Your bots - wherever your users are talking.")
+            .images([
+                 builder.CardImage.create(session, "http://docs.botframework.com/images/demo_bot_image.png")
+            ]);
+        var msg = new builder.Message(session).attachments([card]);
+        session.send(msg);
+        session.send("Hi... I'm the Microsoft Bot Framework demo bot for Facebook. I can show you everything you can use our Bot Builder SDK to do on Facebook.");
+        session.beginDialog('/help');
+    },
   function(session, args, next){
     console.log("session");
     console.log(session);
@@ -213,7 +226,7 @@ function SendResponse(address, resp, shop){
   // console.log(textmsg);
   reply.text(textmsg);
   console.log(resp.shopItem.photo);
-  reply.attachments(resp.shopItem.photo);
+  reply.addAttachment(resp.shopItem.photo[0]);
   reply.address(address);
   console.log('SendResponse');
   console.log(reply);
