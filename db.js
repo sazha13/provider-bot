@@ -1051,7 +1051,7 @@ function getLastReqOrResByThreadId(threadId){
   }
 }
 
-function saveGoodRequest(clothes,size,msg){
+function saveGoodRequest(clothes,size,msg,color,comments){
   var record = {};
   AddChanel(msg)
   .then(function(id){
@@ -1072,10 +1072,10 @@ function saveGoodRequest(clothes,size,msg){
             request.sender = record.sender;
             var user = getReadableUser(resp);
             request.order = {item: AI.item,
-                color: "",
+                color: color,
                 size: size,
                 photo: [],
-                comments: ""
+                comments: comments
               };
             console.log("HERE");
             saveRequestFromOperator(request);

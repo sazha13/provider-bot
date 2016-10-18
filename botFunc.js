@@ -71,60 +71,131 @@ bot.dialog('/',[
   //   db.saveMsgFromUser(session.message,results);
   //
   // }
-  function(session){
-    session.send();
-    db.isUnderConstruction()
-    .then(function(response){
-      db.CreateNewThreads(session)
-      .then(function(){
-        if (response) {
-          if(session.message.text.toLowerCase().indexOf('service on') + 1) {
-            db.SetUnderConstruction(false);
-            session.send("Сервис включен");
-            session.endDialog();
-            return;
-          }
-          session.send("Извините, сервис на стадии разработки");
-        }
-        else {
-          var size= ["S","M"];
-          var sizestr = "S и M?";
-          console.log("Привет".toLowerCase());
-          if(session.message.text.toLowerCase().indexOf('привет') + 1) {
-            session.send("Привет!");
-          }
-          if(session.message.text.toLowerCase().indexOf('пальто') + 1) {
-            session.send("Какой размер вам подобрать? "+sizestr);
-            needItem = "пальто";
-            session.endDialog();
-          }
-          if(session.message.text.toLowerCase().indexOf('рубашк') + 1) {
-            session.send("Какой размер вам подобрать? "+sizestr);
-            needItem = "рубашка";
-            session.endDialog();
-          }
-          if(session.message.text.toLowerCase().indexOf('пончо') + 1) {
-            session.send("К сожалению сейчас у нас нету пончо, может быть, Вам подобрать пальто?");
-            session.endDialog();
-          }
-          if(session.message.text.toLowerCase().indexOf('размер') + 1) {
-            session.send("Понял! Напишу как будут результаты :)");
-            db.saveGoodRequest(needItem,size,session.message);
-            session.endDialog();
-          }
-          if(session.message.text.toLowerCase().indexOf('service off') + 1) {
-            db.SetUnderConstruction(true);
-            session.send("Сервис выключен");
-            session.endDialog();
-          }
-        }
-      })
-
-    });
-
-
-  }
+  Topic2
 ]);
+
+function Topic1(session)
+{
+  session.send();
+  db.isUnderConstruction()
+  .then(function(response){
+    db.CreateNewThreads(session)
+    .then(function(){
+      if (response) {
+        if(session.message.text.toLowerCase().indexOf('service on') + 1) {
+          db.SetUnderConstruction(false);
+          session.send("Сервис включен");
+          session.endDialog();
+          return;
+        }
+        session.send("Извините, сервис на стадии разработки");
+      }
+      else {
+        var size= ["S","M"];
+        var sizestr = "S и M?";
+        console.log("Привет".toLowerCase());
+        if(session.message.text.toLowerCase().indexOf('привет') + 1) {
+          session.send("Привет!");
+        }
+        if(session.message.text.toLowerCase().indexOf('пальто') + 1) {
+          session.send("Какой размер вам подобрать? "+sizestr);
+          needItem = "пальто";
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('рубашк') + 1) {
+          session.send("Какой размер вам подобрать? "+sizestr);
+          needItem = "рубашка";
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('пончо') + 1) {
+          session.send("К сожалению сейчас у нас нету пончо, может быть, Вам подобрать пальто?");
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('размер') + 1) {
+          session.send("Понял! Напишу как будут результаты :)");
+          db.saveGoodRequest(needItem,size,session.message);
+          session.endDialog();
+        }
+        if(session.message.text.toLowerCase().indexOf('service off') + 1) {
+          db.SetUnderConstruction(true);
+          session.send("Сервис выключен");
+          session.endDialog();
+        }
+      }
+    })
+
+  });
+};
+
+function Topic2(session)
+{
+  session.send();
+  db.isUnderConstruction()
+  .then(function(response){
+    db.CreateNewThreads(session)
+    .then(function(){
+      if (response) {
+        if(session.message.text.toLowerCase().indexOf('service on') + 1) {
+          db.SetUnderConstruction(false);
+          session.send("Сервис включен");
+          session.endDialog();
+          return;
+        }
+        session.send("Извините, сервис на стадии разработки");
+      }
+      else {
+
+        var sizestr = "S и M?";
+        // console.log("Привет".toLowerCase());
+        var text = session.message.text.toLowerCase();
+        console.log(text);
+        if(text.indexOf('привет') + 1) {
+          session.send("Приветствую!");
+        }
+        if((text.indexOf('ищу пальто') + 1)) {
+          session.send("Рад видеть тебя :) Уточни, пожалуйста, свой размер. Эта информация останется между мной и тобой.");
+          needItem = "пальто";
+          color = "винное";
+        }
+        if((text.indexOf('ищу рубашк') + 1)) {
+          session.send("Рад видеть тебя :) Уточни, пожалуйста, свой размер. Эта информация останется между мной и тобой.");
+          needItem = "рубашка";
+          color = "винное";
+        }
+        if(text.indexOf('размер m') + 1) {
+          session.send("Ты в отличной форме! Уточни на какой сезон мы подбираем " + needItem + "?");
+          // needItem = "рубашка";
+          size = ["M"];
+        }
+        if(text.indexOf('размер s') + 1) {
+          session.send("Ты в отличной форме! Уточни на какой сезон мы подбираем " + needItem + "?");
+          // needItem = "рубашка";
+          size = ["S"];
+        }
+        if(text.indexOf('зиму') + 1) {
+          session.send("Понял. Дай мне несколько мгновений и я постараюсь тебя удивить. Есть ли предпочтения по силуэту?");
+          comments = "на зиму";
+        }
+        if(text.indexOf('лето') + 1) {
+          session.send("Понял. Дай мне несколько мгновений и я постараюсь тебя удивить. Есть ли предпочтения по силуэту?");
+          comments = "на лето";
+        }
+        if(text.indexOf('прямо') + 1) {
+          session.send("ОК! Ушел на базу, скоро буду.");
+          db.saveGoodRequest(needItem,size,session.message,color,comments);
+        }
+        if(session.message.text.toLowerCase().indexOf('service off') + 1) {
+          db.SetUnderConstruction(true);
+          session.send("Сервис выключен");
+        }
+      }
+    })
+
+  });
+};
+var size= ["M"];
+var comments = "";
+var color = "";
 var needItem = "";
   function botDialog(session) {
     console.log("botDialog");
