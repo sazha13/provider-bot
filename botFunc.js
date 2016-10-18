@@ -24,6 +24,8 @@ intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
   function(session, args, next){
+    blabla(session);
+    return;
     console.log("session");
     console.log(session);
     if (session.message.text == '/reset')
@@ -111,8 +113,7 @@ bot.dialog('/',[
   function botDialog(session) {
     console.log("botDialog");
     // console.log(session);
-    blabla(session);
-    return;
+
     session.send();
 
     session.beginDialog('/LUISintent');
