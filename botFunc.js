@@ -39,39 +39,68 @@ bot.dialog('/',[
     }
     next();
   },
+  // function(session){
+  //   db.CreateNewThreads(session)
+  //     .then(function(response){
+  //       db.GetUserData(session.message)
+  //         .then(function(response){
+  //           if (response) {
+  //             session.userData.subscribe = response.subscribe;
+  //             session.userData.profile = response.profile;
+  //           }
+  //           session.beginDialog('/welcome', session.userData);
+  //         });
+  //     });
+  // },
+  // function(session,results){
+  //   if (results.response.profile != null)
+  //   {
+  //     session.userData = results.response;
+  //     db.UpdateUserData(session.message.address,session.userData)
+  //       .then(function(response){
+  //           if (response==1){
+  //             session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceShoesSmallstr)s по %(choiceShoesLargestr)s', session.userData.profile);
+  //           }else{
+  //             session.beginDialog('/LUISintent');
+  //           }
+  //       });
+  //   }
+  // },
+  // function(session,results){
+  //
+  //   db.saveMsgFromUser(session.message,results);
+  //
+  // }
   function(session){
-    db.CreateNewThreads(session)
-      .then(function(response){
-        db.GetUserData(session.message)
-          .then(function(response){
-            if (response) {
-              session.userData.subscribe = response.subscribe;
-              session.userData.profile = response.profile;
-            }
-            session.beginDialog('/welcome', session.userData);
-          });
-      });
-  },
-  function(session,results){
-    if (results.response.profile != null)
-    {
-      session.userData = results.response;
-      db.UpdateUserData(session.message.address,session.userData)
-        .then(function(response){
-            if (response==1){
-              session.send('Спасибо, %(name)s, я это запомню. Ты %(sex)s, носишь одежду с %(choiceClothesSmallstr)s по %(choiceClothesLargestr)s, а обувь c %(choiceShoesSmallstr)s по %(choiceShoesLargestr)s', session.userData.profile);
-            }else{
-              session.beginDialog('/LUISintent');
-            }
-        });
+    var size= ["S","M"];
+    var sizestr = "S и M?";
+    console.log("Привет".toLowerCase());
+    if(session.message.text.toLowerCase().indexOf('привет') + 1) {
+      session.send("Привет!");
     }
-  },
-  function(session,results){
+    if(session.message.text.toLowerCase().indexOf('пальто') + 1) {
+      session.send("Какой размер вам подобрать? "+sizestr);
+      needItem = "пальто";
+      session.endDialog();
+    }
+    if(session.message.text.toLowerCase().indexOf('рубашк') + 1) {
+      session.send("Какой размер вам подобрать? "+sizestr);
+      needItem = "рубашка";
+      session.endDialog();
+    }
+    if(session.message.text.toLowerCase().indexOf('пончо') + 1) {
+      session.send("К сожелению сейчас у нас нету пончо, может быть, Вам подобрать пальто?");
+      session.endDialog();
+    }
+    if(session.message.text.toLowerCase().indexOf('размер') + 1) {
+      session.send("Понял! Напишу как будут результаты :)");
+      db.saveGoodRequest(needItem,size,session.message);
+      session.endDialog();
+    }
 
-    db.saveMsgFromUser(session.message,results);
-
-  }]);
-
+  }
+]);
+var needItem = "";
   function botDialog(session) {
     console.log("botDialog");
     // console.log(session);

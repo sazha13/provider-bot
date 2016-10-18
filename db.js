@@ -1018,6 +1018,44 @@ function getLastReqOrResByThreadId(threadId){
   }
 }
 
+function saveGoodRequest(clothes,size,msg){
+  var record = {};
+  AddChanel(msg)
+  .then(function(id){
+    record.sender = {'type':'user','id':id};
+    ThreadV2DB.findOne({'userId': id})
+    .exec(function(err,item){
+      if (err) return reject(err);
+      if (item) {
+        record.threadId = item.id;
+        var AI = {shops:["580608573c40411055ec8342"], item: clothes};
+        if (AI.shops.length)
+        {
+          getUserById(id)
+          .then(function(resp){
+            var request = {};
+            request.threadId = item.id;
+            request.shops = AI.shops;
+            request.sender = record.sender;
+            var user = getReadableUser(resp);
+            request.order = {item: AI.item,
+                color: "",
+                size: size,
+                photo: [],
+                comments: ""
+              };
+            console.log("HERE");
+            saveRequestFromOperator(request);
+          });
+
+        };
+      };
+
+    });
+  });
+
+}
+exports.saveGoodRequest = saveGoodRequest;
 exports.CreateShop = CreateShop;
 exports.CreateAddress = CreateAddress;
 exports.CreateConsultant = CreateConsultant;
