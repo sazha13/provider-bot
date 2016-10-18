@@ -23,6 +23,59 @@ onBoard.registerDialogs(bot);
 intentDialog.registerDialogs(bot);
 
 bot.dialog('/',[
+  function (session){
+    var receipt = new builder.ReceiptCard(session)
+      .title(shop.name);
+    var receiptItem = new builder.ReceiptItem(session)
+      .price(resp.shopItem.price)
+      .title(resp.shopItem.item)
+      .subtitle(resp.shopItem.size)
+      .text(resp.shopItem.color)
+      .image(builder.CardImage.create(session,resp.shopItem.photo[0].contentUrl));
+    var items = [receiptItem.toItem()];
+    // for (var i = 0; i<resp.shopItem.photo.length; i++)
+    // {
+    //   var photo = new builder.CardImage();
+    //   photo.url(resp.shopItem.photo[i].contentUrl)
+    //   console.log(photo);
+    //   var item = new builder.ReceiptItem()
+    //     .price(resp.shopItem.price)
+    //     .title(resp.shopItem.item)
+    //     .subtitle(resp.shopItem.size)
+    //     .text(resp.shopItem.color)
+    //     .image([photo.toImage()]);
+    //   items.push(item.toItem());
+    //   console.log(item);
+    //   console.log(items);
+    // }
+    receipt.buttons([]);
+    receipt.facts([]);
+    // receipt.tax("tax");
+    // receipt.total("total");
+    // receipt.vat("vat");
+    receipt.items(items);
+    console.log(receipt);
+    // var reply = new builder.Message();
+    // var textmsg = "Магазин: " + shop.name + "\n\n";
+    // textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
+    // textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
+    // textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
+    // textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
+    // // console.log(textmsg);
+    // reply.text(textmsg);
+    // console.log(resp.shopItem.photo);
+    // reply.addAttachment(resp.shopItem.photo[0]);
+    // reply.address(address);
+    // console.log('SendResponse');
+    // console.log(reply);
+    // bot.send(reply,function(err){ });
+    // return;
+    var receiptMsg = new builder.Message(session)
+      .attachments([receipt.toAttachment()])
+      .address(address)
+      .text("");
+    session.send(receiptMsg);
+  },
   function(session, args, next){
     console.log("session");
     console.log(session);
@@ -179,7 +232,7 @@ function SendResponse(address, resp, shop){
     .title(resp.shopItem.item)
     .subtitle(resp.shopItem.size)
     .text(resp.shopItem.color)
-    .image(builder.CardImage.create(null,resp.shopItem.photo[0].contentUrl))
+    .image(builder.CardImage.create(null,resp.shopItem.photo[0].contentUrl));
   var items = [receiptItem.toItem()];
   // for (var i = 0; i<resp.shopItem.photo.length; i++)
   // {
@@ -218,11 +271,14 @@ function SendResponse(address, resp, shop){
   // console.log(reply);
   // bot.send(reply,function(err){ });
   // return;
-  var receiptMsg = new builder.Message();
-  receiptMsg.text("");
-  receiptMsg.addAttachment(receipt.toAttachment());
+  var receiptMsg = new builder.Message()
+    .attachments([receipt.toAttachment()])
+    .address(address)
+    .text("");
+  // receiptMsg.text("");
+  // receiptMsg.addAttachment(receipt.toAttachment());
 
-  receiptMsg.address(address);
+  // receiptMsg.address(address);
   console.log(receipt.toAttachment());
   console.log("HERE");
   console.log(receiptMsg);
