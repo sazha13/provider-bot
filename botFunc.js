@@ -25,13 +25,13 @@ intentDialog.registerDialogs(bot);
 bot.dialog('/',[
   function (session){
     var receipt = new builder.ReceiptCard(session)
-      .title(shop.name);
+      .title("shop.name");
     var receiptItem = new builder.ReceiptItem(session)
-      .price(resp.shopItem.price)
-      .title(resp.shopItem.item)
-      .subtitle(resp.shopItem.size)
-      .text(resp.shopItem.color)
-      .image(builder.CardImage.create(session,resp.shopItem.photo[0].contentUrl));
+      .price("resp.shopItem.price")
+      .title("resp.shopItem.item")
+      .subtitle("resp.shopItem.size")
+      .text("resp.shopItem.color")
+      .image(builder.CardImage.create(session,"https://s3-eu-west-1.amazonaws.com/bundlesmqd123/upload/example.jpg"));
     var items = [receiptItem.toItem()];
     // for (var i = 0; i<resp.shopItem.photo.length; i++)
     // {
@@ -72,7 +72,6 @@ bot.dialog('/',[
     // return;
     var receiptMsg = new builder.Message(session)
       .attachments([receipt.toAttachment()])
-      .address(address)
       .text("");
     session.send(receiptMsg);
   },
