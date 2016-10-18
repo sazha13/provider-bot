@@ -56,14 +56,14 @@ bot.dialog('/',[
     // receipt.items(items);
     // console.log(receipt);
     var reply = new builder.Message(session);
-    var textmsg = "Магазин: " + shop.name + "\n\n";
-    textmsg += "Вещь: "+ resp.shopItem.item + "\n\n";
-    textmsg += "Размер: "+ resp.shopItem.size + "\n\n";
-    textmsg += "Цвет: "+ resp.shopItem.color + "\n\n";
-    textmsg += "Цена: "+ resp.shopItem.price + "\n\n";
+    var textmsg = "Магазин: " + "shop.name" + "\n\n";
+    textmsg += "Вещь: "+ "resp.shopItem.item" + "\n\n";
+    textmsg += "Размер: "+ "resp.shopItem.size" + "\n\n";
+    textmsg += "Цвет: "+ "resp.shopItem.color" + "\n\n";
+    textmsg += "Цена: "+ "resp.shopItem.price" + "\n\n";
     // console.log(textmsg);
     reply.text(textmsg);
-    console.log(resp.shopItem.photo);
+    // console.log(resp.shopItem.photo);
     reply.addAttachment({"contentUrl": "http://docs.botframework.com/images/demo_bot_image.png",
                             "contentType": "image/jpeg"  });
 
