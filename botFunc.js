@@ -88,6 +88,15 @@ function Topic1(session)
           session.endDialog();
           return;
         }
+        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        console.log(session.message.text);
+        if(session.message.text.toLowerCase().indexOf('reset thread') + 1) {
+          db.SetUnderConstruction(false);
+          session.send("удалено возможно");
+          session.endDialog();
+          return;
+        }
+        console.log("+++++++++++++++++++++++++++++++++++++++");
         session.send("Извините, сервис на стадии разработки");
       }
       else {
@@ -138,6 +147,12 @@ function Topic2(session)
         if(session.message.text.toLowerCase().indexOf('service on') + 1) {
           db.SetUnderConstruction(false);
           session.send("Сервис включен");
+          session.endDialog();
+          return;
+        }
+        if(session.message.text.toLowerCase().indexOf('reset thread') + 1) {
+          db.ClearThreadbyMsg(session.message);
+          session.send("удалено возможно");
           session.endDialog();
           return;
         }

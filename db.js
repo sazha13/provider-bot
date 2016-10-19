@@ -1088,6 +1088,33 @@ function saveGoodRequest(clothes,size,msg,color,comments){
   });
 
 }
+
+function ClearThreadbyMsg(msg){
+  return new Promise(function(resolve,reject){
+    UserDB.findOne({'address.user.id': msg.address.user.id}).exec(function(err, user) {
+      if (err) return reject(err);
+      if (user == null) return resolve();
+      ThreadV2DB.findOne({'userId': user.id})
+      .exec(function(err, thread) {
+
+        MessageDB.find({'threadId':thread.id})
+          .remove()
+          .exec();
+
+        RequestDB.find({'threadId':thread.id})
+        .remove()
+        .exec();
+        ResponseDB.find({'threadId':thread.id})
+        .remove()
+        .exec();
+        thread.messages = [];
+        thread.responses = [];
+        thread.save();
+      });
+    });
+  });
+}
+exports.ClearThreadbyMsg = ClearThreadbyMsg;
 exports.saveGoodRequest = saveGoodRequest;
 exports.CreateShop = CreateShop;
 exports.CreateAddress = CreateAddress;
