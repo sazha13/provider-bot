@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "apns": "^0.1.0",
-    "botbuilder": "^3.3.0",
+    "botbuilder": "^3.9.0",
     "mongoose": "^4.5.8",
     "restify": "^4.1.1",
     "ws": "^1.1.1"
